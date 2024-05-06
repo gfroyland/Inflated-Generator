@@ -240,27 +240,14 @@ function plot_SEBA_IDL(grid, Σ)
 
 end
 
-function save_results(grid, λ, v, s, Λ, V, Σ, filename)
+function save_results(grid, Λ, V, Σ, filename)
 
     file_ID = h5open(filename, "w")
 
     file_ID["longitude"] = grid.x_range
     file_ID["latitude"] = grid.y_range
 
-    s_max = maximum(s, dims=2)
     Σ_max = maximum(Σ, dims=2)
-
-    file_ID["DL_Lambda_Real"] = real.(λ)
-    file_ID["DL_Lambda_Imag"] = imag.(λ)
-    for β ∈ 1:size(v, 2)
-        varname = "DL_v_" * lpad(β, 2, "0")
-        file_ID[varname] = real.(reshape(v[:, β], length(grid.y_range), length(grid.x_range)))
-    end
-    for γ ∈ 1:size(s,2)
-        varname = "DL_SEBA_" * lpad(γ, 2, "0")
-        file_ID[varname] = real.(reshape(s[:, γ], length(grid.y_range), length(grid.x_range)))
-    end
-    file_ID["DL_SEBA_Max"] = real.(reshape(s_max, length(grid.y_range), length(grid.x_range)))
 
     file_ID["IDL_Lambda_Real"] = real.(Λ)
     file_ID["IDL_Lambda_Imag"] = imag.(Λ)
