@@ -39,10 +39,8 @@ function make_generator(d, grid, F, ϵ)
 
     #create list of box centres
     centres = collect(keys(d))
-    #compute volumes of cells. constant at the moment, but adjust later
-    #WHEN MAKING IT NONCONSTANT LATER, BE SURE TO MATCH THE CORRECT INDEXING IN THE DICTIONARY AND ENSURE IT IS INDEXED CORRECTLY IN THE G COMPUTATION
-    #GF: I believe it is fixed below.
 
+    #compute volumes of cells
     volume = zeros(length(centres))
     for c ∈ centres
         volume[d[c]] = grid.Δ_x * grid.Δ_y
@@ -71,7 +69,7 @@ function make_generator(d, grid, F, ϵ)
     lowerface(c, t) = c + (δx / 2 - δy / 2) - δx * t
 
     #construct the generator matrix G
-    tol = 1e-2  #hard coded for now, but ultimately should be adapted to entry sizes of 
+    tol = 1e-2  #hard coded for now, but may need to be adapted to integral magnitudes
     intorder = 1
     #start looping over c (centres of cells)
     for c ∈ centres
@@ -104,25 +102,12 @@ function make_generator(d, grid, F, ϵ)
     #G = G - spdiagm(vec(sum(G, dims=2)))
 
     #place negative row sums on the diagonal of G so that the row sum of G is now zero.
-    
     G = G - spdiagm(vec(sum(spdiagm(1 ./ volume) * G * spdiagm(volume), dims=2)))
 
     #adjust G by a similarity transformation to ensure that the matrix has row sum 0
     #this ensures leading right evec is constant and leading left evec is a *density* rather than a measure on each box.
     #see Lemma 4.7 in FJK'13.
-
     G = spdiagm(1 ./ volume) * G * spdiagm(volume)
-
-    #I suspect I can replace this lengthy code with the code above...indexing same?
-    #=
-    Gdiag = spzeros(Gdim, Gdim)
-    for c1 ∈ centres
-        for c2 ∈ centres
-            Gdiag[d[c1], d[c2]] = volume[d[c2]] / volume[d[c1]] * G[d[c1], d[c2]]
-        end
-    end
-    G = G - spdiagm(vec(sum(Gdiag, dims=2)))
-    =#
 
     return G
 end
