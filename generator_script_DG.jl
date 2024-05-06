@@ -51,7 +51,7 @@ println("Making inflated generator...")
 println("Computing inflated eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
-println("Plotting slices...")
+println("Plotting slices...WHY DOES `IDL' APPEAR IN SEVERAL PLACES?  WE ARE NOT COMPUTING INFLATED DYNAMIC LAPLACIANS")
 @time plot_spatemp_IDL(grid, Λ, V)
 @time plot_9vecs_IDL(grid, Λ, V)
 
