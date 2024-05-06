@@ -1,5 +1,3 @@
-using Statistics
-using HDF5
 include("generator_functions_DG.jl")
 
 # x and y arrays remain the same at each time step
@@ -81,7 +79,10 @@ seba_inds = [1 ; 2]
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
 @time plot_SEBA_IDL(grid, Σ)
-# Save the results to an HDF5 file
+# Save the results to an HDF5 file (if desired)
+
+using Dates
+using HDF5
 time_now = now()
 name_save_file = "IDL_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
-@time save_results(grid, λ, v, s, Λ, V, Σ, name_save_file)
+@time save_results(grid, Λ, V, Σ, name_save_file)
