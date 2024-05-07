@@ -1,6 +1,6 @@
 using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, ProgressMeter
 
-#create a data structure for the grid;  it might be expanded later to include e.g. G, spectrum, evecs, etc... or other items
+#create a data structure for the grid
 struct Grid
     centres
     x_range
@@ -13,9 +13,10 @@ struct Grid
     Δ_y
 end
 
+#include the Sparse EigenBasis Approximation function
 include("SEBA.jl")
 
-#create a dictionary to do the indexing we want and a grid struct
+"`make_dict_grid` creates a dictionary to set up our indexing of the grid and fill the grid struct"
 function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
     x_range = x_min+Δ_x/2:Δ_x:x_max-Δ_x/2
     y_range = y_min+Δ_y/2:Δ_y:y_max-Δ_y/2
@@ -35,6 +36,7 @@ function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
     return d, grid
 end
 
+"`make_generator(d, grid, F, ϵ)` creates a generator on the grid given by the pair `d`, `grid` for the vector field `F` with spatial diffusion parameter `ϵ`."
 function make_generator(d, grid, F, ϵ)
 
     #create list of box centres
@@ -46,13 +48,12 @@ function make_generator(d, grid, F, ϵ)
         volume[d[c]] = grid.Δ_x * grid.Δ_y
     end
 
-    #create basic lon,lat increment vectors to access adjacent grid cells
+    #create incremental vectors to access adjacent grid cells
     δx = [grid.Δ_x, 0]
     δy = [0, grid.Δ_y]
 
     #create list of box centres
-    #create an array G (for Generator) to hold the flux values. 
-    #G is the main array we want to compute
+    #create an empty array G (for Generator) to hold the flux values. 
     x_length = length(grid.x_range)
     y_length = length(grid.y_range)
     Gdim = x_length * y_length
@@ -76,7 +77,6 @@ function make_generator(d, grid, F, ϵ)
         rightc = round.(c + δx, digits=6)
         if rightc ∈ keys(d)  #check that the box on the right exists
             #compute the entry for G corresponding to flux through the right face
-            #I add ϵ directly to the flux value, so it is also integrated from 0 to 1
             #Because of the integration from 0 to 1 instead of 0 to the length of the face, instead of
             #dividing by volume, I multiply by (Δ_y/volume), which is 1/Δ_x.
             #similarly in the other faces below
@@ -85,17 +85,14 @@ function make_generator(d, grid, F, ϵ)
         end
         leftc = round.(c - δx, digits=6)
         if leftc ∈ keys(d)
-            #G[d[c], d[leftc]] = (quadgk(t -> max(F(leftface(c, t)) ⋅ leftnormal, 0) + ϵ, 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_x
             G[d[c], d[leftc]] = (quadgk(t -> max(F(leftface(c, t)) ⋅ leftnormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_x + (ϵ^2 / (2 * (grid.Δ_x)^2))
         end
         upperc = round.(c + δy, digits=6)
         if upperc ∈ keys(d)
-            #G[d[c], d[upperc]] = (quadgk(t -> max(F(upperface(c, t)) ⋅ uppernormal, 0) + ϵ, 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_y
             G[d[c], d[upperc]] = (quadgk(t -> max(F(upperface(c, t)) ⋅ uppernormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_y + (ϵ^2 / (2 * (grid.Δ_y)^2))
         end
         lowerc = round.(c - δy, digits=6)
         if lowerc ∈ keys(d)
-            #G[d[c], d[lowerc]] = (quadgk(t -> max(F(lowerface(c, t)) ⋅ lowernormal, 0) + ϵ, 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_y
             G[d[c], d[lowerc]] = (quadgk(t -> max(F(lowerface(c, t)) ⋅ lowernormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_y + (ϵ^2 / (2 * (grid.Δ_y)^2))
         end
     end
@@ -110,15 +107,10 @@ function make_generator(d, grid, F, ϵ)
     G = spdiagm(1 ./ volume) * G * spdiagm(volume)
 
     return G
-end
-
-function make_dynamic_generator(Gvec)
-
-    Gᴰ = mean(Gvec)
-    return Gᴰ
 
 end
 
+"`make_inflated_generator(Gvec, Δt, a)` constructs theinflated generator from the time-indexed vector of generator matrices `Gvec` with discrete temporal spacing `Δt` and temporal diffusion parameter `a`"
 function make_inflated_generator(Gvec, Δt, a)
 
     #create Gspat
@@ -138,6 +130,8 @@ function make_inflated_generator(Gvec, Δt, a)
 
     return 𝐆
 end
+
+#FROM HERE WE SHOULD DECIDE WHAT TO INCLUDE IN THE PUBLIC VERSION
 
 function plot_9vecs_IDL(grid, Λ, V)
 
