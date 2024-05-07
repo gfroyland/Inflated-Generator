@@ -4,9 +4,11 @@ println("Setting up the grid...")
 xmin, Δx, xmax = 0, 0.04, 3
 ymin, Δy, ymax = 0, 0.04, 2
 
+# Set time domain and discrete time spacing
 Δt = 0.05
 T_range = 0:Δt:1
 
+# Create grid and indexing
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
 
 # Define the switching double gyre vector field
@@ -19,10 +21,12 @@ F_median = median(norm(F(t, x)) for t ∈ T_range for x ∈ grid.centres)
 println("The median of the speeds is... $F_median")
 # Value of F_median recorded: 0.7184901312589542
 
+# Set the spatial diffusion parameter ϵ
 ϵ = sqrt(0.1*F_median*(grid.Δ_x))
 println("The calculated ϵ value is... $ϵ")
 # Value of ϵ recorded: 0.05360933244348242
 
+# Create a vector of generators for each discrete time point
 Gvec = []
 @showprogress for t ∈ T_range
 
