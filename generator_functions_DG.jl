@@ -133,7 +133,7 @@ end
 
 #FROM HERE WE SHOULD DECIDE WHAT TO INCLUDE IN THE PUBLIC VERSION
 
-function plot_9vecs_IDL(grid, Λ, V)
+function plot_9vecs_InfGen(grid, Λ, V)
 
     spacelength = length(grid.x_range) * length(grid.y_range)
     T = Int(size(V)[1] / spacelength)
@@ -158,7 +158,7 @@ function plot_9vecs_IDL(grid, Λ, V)
 
 end
 
-function plot_spatemp_IDL(grid, Λ, V)
+function plot_spatemp_InfGen(grid, Λ, V)
 
     #plot inflated spectrum
     display(Plots.scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
@@ -181,7 +181,7 @@ function plot_spatemp_IDL(grid, Λ, V)
 
 end
 
-function plot_SEBA_IDL(grid, Σ)
+function plot_SEBA_InfGen(grid, Σ)
 
     # Prepare the slices of nine eigenvectors at each time step 
     spacelength = length(grid.x_range) * length(grid.y_range)
