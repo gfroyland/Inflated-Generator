@@ -26,15 +26,6 @@ println("The median of the speeds is... $F_median")
 println("The calculated ϵ value is... $ϵ")
 # Value of ϵ recorded: 0.05360933244348242
 
-# Create a vector of generators for each discrete time point
-Gvec = []
-for t ∈ T_range
-
-    G = make_generator(d, grid, x -> F(t, x), ϵ)
-    push!(Gvec, G)
-
-end
-
 # Set temporal diffusion parameter strength
 a = sqrt(1.1*F_median*(grid.Δ_x))/3
 println("The initial a value is... $a")
@@ -42,8 +33,16 @@ println("The initial a value is... $a")
 a = 0.1
 # Value of a used: 0.1
 
-println("Making inflated generator...")
-@time 𝐆 = make_inflated_generator(Gvec, Δt, a)
+@time begin println("Making inflated generator...")
+    # Create a vector of generators for each discrete time point
+    Gvec = []
+    for t ∈ T_range
+        G = make_generator(d, grid, x -> F(t, x), ϵ)
+        push!(Gvec, G)
+    end
+    # Assemble individual generators into the inflated generator
+    𝐆 = make_inflated_generator(Gvec, Δt, a)
+end
 
 println("Computing inflated eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
