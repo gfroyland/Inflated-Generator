@@ -133,6 +133,105 @@ end
 
 #FROM HERE WE SHOULD DECIDE WHAT TO INCLUDE IN THE PUBLIC VERSION
 
+"`plot_spectrum_meanvar(grid, Λ, V)` plots the length(Λ) leading eigenvalues of the spectrum of the inflated generator, along with the meanvariance plot to test each eigenvalue to see if it is spatial or temporal."
+function plot_spectrum_meanvar(grid, Λ, V)
+
+    #plot inflated spectrum
+    display(Plots.scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
+
+    N = length(grid.x_range) * length(grid.y_range)
+    T = Int(size(V)[1] / N)
+
+    K = size(V, 2)
+
+    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
+
+    # Visualise the results
+
+    x_disp = 1:K
+    display(Plots.scatter(x_disp, meanvariance))
+
+    return meanvariance
+
+    #should be close to zero for temporal eigenfunctions (and the trivial eigenfunction) and far from zero for spatial eigenfunctions
+
+end
+
+"`plot_slices(V, grid, vecnum)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid`."
+function plot_slices(V, grid, vecnum)
+
+    spacelength = length(grid.x_range) * length(grid.y_range)
+    T = Int(size(V)[1] / spacelength)
+
+    # ℓ^2-normalize each column of V and scale so that entries are close to ±1 
+    V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+
+    #create a T-vector of time-slices (copies of space)
+    sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
+
+    # find a common colour range
+    cmax = maximum(abs.(real(V[:, vecnum])))
+
+    # create an animation of frames of the eigenvector
+    anim = @animate for t = 1:T
+        tm = (t - 1) / (T - 1)
+        Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=:RdBu, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+    end
+
+    # plot individual time frames
+    fig = []
+    for t = 1:T
+        tm = (t - 1) / (T - 1)
+        push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=cgrad(:RdBu, rev=true), title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+    end
+
+    # display the frames and the animation
+    display(plot(fig[1:2:end]..., layout=(3, 5)))
+    display(gif(anim, fps=10))
+
+end
+
+function plot_SEBA(Σ, grid, sebanum)
+
+    spacelength = length(grid.x_range) * length(grid.y_range)
+    T = Int(size(Σ)[1] / spacelength)
+
+    #create a T-vector of time-slices (copies of space)
+    sliceΣ = [Σ[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
+
+    # create an animation of frames of the SEBA vector
+    if (sebanum == 0) # Plot the max of all SEBA vectors
+        anim = @animate for t = 1:T
+            tm = (t - 1) / (T - 1)
+            Plots.contourf(grid.x_range, grid.y_range, reshape(maximum(sliceΣ[t][:, :], dims=2), length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        end
+    else
+        anim = @animate for t = 1:T
+            tm = (t - 1) / (T - 1)
+            Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        end
+    end
+
+    # plot individual time frames
+    fig = []
+    if (sebanum == 0) # Plot the max of all SEBA vectors
+        for t = 1:T
+            tm = (t - 1) / (T - 1)
+            push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(maximum(sliceΣ[t][:, :], dims=2), length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        end
+    else
+        for t = 1:T
+            tm = (t - 1) / (T - 1)
+            push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        end
+    end
+    
+    # display the frames and the animation
+    display(plot(fig[1:2:end]..., layout=(3, 5)))
+    display(gif(anim, fps=10))
+
+end
+#=
 function plot_9vecs_InfGen(grid, Λ, V)
 
     spacelength = length(grid.x_range) * length(grid.y_range)
@@ -158,28 +257,7 @@ function plot_9vecs_InfGen(grid, Λ, V)
 
 end
 
-function plot_spatemp_InfGen(grid, Λ, V)
 
-    #plot inflated spectrum
-    display(Plots.scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
-
-    N = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(V)[1] / N)
-
-    K = size(V, 2)
-
-    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
-
-    # Visualise the results
-
-    x_disp = 1:K
-    display(Plots.scatter(x_disp, meanvariance))
-
-    return meanvariance
-
-    #should be close to zero for temporal eigenfunctions (and the trivial eigenfunction) and far from zero for spatial eigenfunctions
-
-end
 
 function plot_SEBA_InfGen(grid, Σ)
 
@@ -218,7 +296,7 @@ function plot_SEBA_InfGen(grid, Σ)
     println("Max SEBA Video Complete.")
 
 end
-
+=#
 function save_results(grid, Λ, V, Σ, filename)
 
     file_ID = h5open(filename, "w")
