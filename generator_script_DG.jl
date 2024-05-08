@@ -59,10 +59,8 @@ seba_inds = [1 , 2]
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
 @time plot_SEBA_InfGen(grid, Σ)
-# Save the results to an HDF5 file (if desired)
 
-#I SUPPOSE THAT WE DON'T NEED DATES SINCE TIME IS NOMINAL WITHOUT UNITS IN DOUBLE GYRE
-# I use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
+# Save the results to an HDF5 file (if desired)
 using Dates
 using HDF5
 time_now = now()
