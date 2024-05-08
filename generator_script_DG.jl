@@ -8,13 +8,13 @@ include("plot_slices.jl")
 Δt = 0.05
 T_range = 0:Δt:1
 
-# Create spatial domain grid and indexing
+# Create a grid and indexing for the spatial domain [xmin,xmax]x[ymin,ymax]
 println("Setting up the grid...")
 xmin, Δx, xmax = 0, 0.1, 3
 ymin, Δy, ymax = 0, 0.1, 2
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
 
-# Define the switching double gyre vector field
+# Define the time-dependent switching double gyre vector field F(t,x)
 r(t) = (1 / 2) * (1 + tanh(10 * (t - (1 / 2))))
 α(t) = (1 - 2 * r(t)) / (3 * (r(t) - 2) * (r(t) + 1))
 β(t) = (2 - 9 * α(t)) / 3
