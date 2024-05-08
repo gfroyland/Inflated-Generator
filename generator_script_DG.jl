@@ -49,7 +49,6 @@ println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
-<<<<<<< HEAD
 @time plot_slices(V, grid, 3)
 
 # Calculate SEBA Vectors from the leading two eigenvectors
@@ -58,26 +57,14 @@ seba_inds = [1, 3]
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 @time plot_SEBA(Σ, grid, 0) # For a max(SEBA) plot, insert 0 for vecnum
 
-# Save the results to an HDF5 file (if desired)
-
 #I SUPPOSE THAT WE DON'T NEED DATES SINCE TIME IS NOMINAL WITHOUT UNITS IN DOUBLE GYRE
 # I used to use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
 
-#using Dates
-=======
 #HERE YOU CAN REPLACE WITH THE PLOT_SLICES CODE I SENT BY EMAIL...ALSO FOR THE SEBA PLOTTING BELOW
-@time plot_spatemp_InfGen(grid, Λ, V)
-@time plot_9vecs_InfGen(grid, Λ, V)
-
-# Calculate SEBA Vectors from the leading two eigenvectors
-seba_inds = [1 , 2] 
-Σ, ℛ = SEBA(real.(V[:, seba_inds]))
-println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
-@time plot_SEBA_InfGen(grid, Σ)
+# Already done, please see above
 
 # Save the results to an HDF5 file (if desired)
-using Dates
->>>>>>> fb3fb6853e76ea5a4be52cf735e617bf99e3899d
+#using Dates
 using HDF5
 #time_now = now()
 #name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
