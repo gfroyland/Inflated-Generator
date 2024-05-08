@@ -59,8 +59,9 @@ println("Plotting slices...")
 
 # Calculate SEBA Vectors from the leading two eigenvectors
 # UNCLEAR HOW VECTORS 1 AND 3 ARE THE LEADING TWO EIGENVECTORS
+println("Computing SEBA vectors...")
 seba_inds = [1, 3]
-Σ, ℛ = SEBA(real.(V[:, seba_inds]))
+@time Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
 # WE DON'T NEED SPECIAL SEBA PLOTTING CODE, JUST INPUT SEBA VECTORS INTO PLOT_SLICES
