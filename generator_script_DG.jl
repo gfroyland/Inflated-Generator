@@ -44,7 +44,7 @@ a = 0.1
     𝐆 = make_inflated_generator(Gvec, Δt, a)
 end
 
-println("Computing inflated eigenvalues...")
+println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
