@@ -9,8 +9,8 @@ xmin, Δx, xmax = 0, 0.1, 3
 ymin, Δy, ymax = 0, 0.1, 2
 
 # Set time domain and discrete time spacing
-Δt = 0.1
-T_range = 0:Δt:2
+Δt = 0.05
+T_range = 0:Δt:1
 
 # Create grid and indexing
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
