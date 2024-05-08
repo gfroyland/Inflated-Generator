@@ -191,6 +191,7 @@ function plot_slices(V, grid, vecnum)
 
 end
 
+#WHY DO WE NEED A SEPARATE FUNCTION TO PLOT SEBA VECTORS?  DON'T WE JUST INPUT SEBA VECTORS INSTEAD OF EIGENVECTORS INTO THE PREVIOUS FUNCTION?
 function plot_SEBA(Σ, grid, sebanum)
 
     spacelength = length(grid.x_range) * length(grid.y_range)
@@ -231,72 +232,8 @@ function plot_SEBA(Σ, grid, sebanum)
     display(gif(anim, fps=10))
 
 end
-#=
-function plot_9vecs_InfGen(grid, Λ, V)
-
-    spacelength = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(V)[1] / spacelength)
-
-    sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
-
-    cmax = maximum(abs.(real(V)), dims=1)
-
-    for τ ∈ 1:T
-    #anim = @animate for τ ∈ 1:T
-
-        τ_m = (τ - 1) / (T - 1)
-        P = []
-        for k = 1:9
-            push!(P, Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[τ][:, k]), length(grid.y_range), length(grid.x_range)), clims=(-cmax[k], cmax[k]), c=:RdBu, xlabel="x", ylabel="y", title="v_$k, t = $τ_m", linewidth=0, levels=100))
-        end
-        display(Plots.plot(P..., layout=(3, 3)))
-    end
-
-    #gif(anim, "EuroBlock_0DayExt_9EigVecs_a3p5_30Jan24.gif", fps=2)
-    #gif(anim, "DoubleGyre_9EigVecs_22Apr24_2.mp4", fps=2)
-
-end
 
 
-
-function plot_SEBA_InfGen(grid, Σ)
-
-    # Prepare the slices of nine eigenvectors at each time step 
-    spacelength = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(Σ)[1] / spacelength)
-
-    sliceΣ = [Σ[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
-
-    # Plot All SEBA Evolutions
-
-    for σ ∈ 1:size(Σ)[2]
-        vidname = "DG_SEBA_3Vecs_" * lpad(σ, 1, "0") * "_a1p5_31Jan24.mp4"
-        for t ∈ 1:T
-        #anim = @animate for t ∈ 1:T
-
-            τ_m = (t - 1) / (T - 1)
-            display(Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, σ], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="SEBA $σ, t = $τ_m", linewidth=0, levels=100))
-
-        end
-        #gif(anim, vidname, fps=2)
-        println("SEBA Video $σ Complete.")
-    end
-
-    # Plot the Maxima of each SEBA Vector
-
-    vidname = "DG_SEBAMax_3Vecs_a1p5_31Jan24.mp4"
-    for 𝒯 ∈ 1:T
-    #anim = @animate for 𝒯 ∈ 1:T
-
-        τ_m = (𝒯 - 1) / (T - 1)
-        display(Plots.contourf(grid.x_range, grid.y_range, reshape(maximum(sliceΣ[𝒯][:, :], dims=2), length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="Max SEBA, t = $τ_m", linewidth=0, levels=100))
-
-    end
-    #gif(anim, vidname, fps=2)
-    println("Max SEBA Video Complete.")
-
-end
-=#
 function save_results(grid, Λ, V, Σ, filename)
 
     file_ID = h5open(filename, "w")

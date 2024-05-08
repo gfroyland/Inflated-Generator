@@ -1,4 +1,7 @@
+using HDF5
 include("generator_functions_DG.jl")
+
+#WE DON'T NEED THIS BECAUSE IT IS IN GENERATOR_FUNCTIONS
 include("plot_slices.jl")
 
 println("Setting up the grid...")
@@ -49,24 +52,21 @@ println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
+#WHY ARE WE PLOTTING THE THIRD EIGENVECTOR AND NOT THE SECOND?
 @time plot_slices(V, grid, 3)
 
 # Calculate SEBA Vectors from the leading two eigenvectors
+# UNCLEAR HOW VECTORS 1 AND 3 ARE THE LEADING TWO EIGENVECTORS
 seba_inds = [1, 3]
 Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
+
+# WE DON'T NEED SPECIAL SEBA PLOTTING CODE, JUST INPUT SEBA VECTORS INTO PLOT_SLICES
 @time plot_SEBA(Σ, grid, 0) # For a max(SEBA) plot, insert 0 for vecnum
 
-#I SUPPOSE THAT WE DON'T NEED DATES SINCE TIME IS NOMINAL WITHOUT UNITS IN DOUBLE GYRE
-# I used to use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
-
-#HERE YOU CAN REPLACE WITH THE PLOT_SLICES CODE I SENT BY EMAIL...ALSO FOR THE SEBA PLOTTING BELOW
-# Already done, please see above
-
-# Save the results to an HDF5 file (if desired)
-#using Dates
-using HDF5
-#time_now = now()
+# Save the results to an HDF5 file 
 #name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
 name_save_file = "InfGen_Results_SwitchingDoubleGyre.h5"
+
+#A DESCRIPTION OF WHAT IS ACTUALLY BEING SAVED WOULD BE HELPFUL, SINCE IT SEEMS YOU DON'T SAVE THE INPUTS
 @time save_results(grid, Λ, V, Σ, name_save_file)
