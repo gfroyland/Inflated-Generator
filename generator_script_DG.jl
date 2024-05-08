@@ -1,4 +1,5 @@
 include("generator_functions_DG.jl")
+include("plot_slices.jl")
 
 println("Setting up the grid...")
 xmin, Δx, xmax = 0, 0.1, 3
@@ -22,7 +23,7 @@ println("The median of the speeds is... $F_median")
 # Value of F_median recorded: 0.7184901312589542
 
 # Set the spatial diffusion parameter ϵ
-ϵ = sqrt(0.1*F_median*(grid.Δ_x))
+ϵ = sqrt(0.1 * F_median * (grid.Δ_x))
 println("The calculated ϵ value is... $ϵ")
 # Value of ϵ recorded: 0.05360933244348242
 
@@ -36,7 +37,7 @@ for t ∈ T_range
 end
 
 # Set temporal diffusion parameter strength
-a = sqrt(1.1*F_median*(grid.Δ_x))/3
+a = sqrt(1.1 * F_median * (grid.Δ_x)) / 3
 println("The initial a value is... $a")
 # Value of a recorded: 0.05926734699215261
 a = 0.1
@@ -49,23 +50,22 @@ println("Computing inflated eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
-# All fixed, I've switched out "IDL" for "InfGen".
-@time plot_spatemp_InfGen(grid, Λ, V)
-@time plot_9vecs_InfGen(grid, Λ, V)
+@time plot_slices(V, grid, 3)
 
 # Calculate SEBA Vectors from the leading two eigenvectors
-seba_inds = [1 , 2] 
-
+seba_inds = [1, 3]
 Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
+@time plot_SEBA(Σ, grid, 0) # For a max(SEBA) plot, insert 0 for vecnum
 
-@time plot_SEBA_InfGen(grid, Σ)
 # Save the results to an HDF5 file (if desired)
 
 #I SUPPOSE THAT WE DON'T NEED DATES SINCE TIME IS NOMINAL WITHOUT UNITS IN DOUBLE GYRE
-# I use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
-using Dates
+# I used to use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
+
+#using Dates
 using HDF5
-time_now = now()
-name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
+#time_now = now()
+#name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
+name_save_file = "InfGen_Results_SwitchingDoubleGyre.h5"
 @time save_results(grid, Λ, V, Σ, name_save_file)
