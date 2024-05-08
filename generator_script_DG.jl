@@ -1,8 +1,8 @@
 include("generator_functions_DG.jl")
 
 println("Setting up the grid...")
-xmin, Δx, xmax = 0, 0.04, 3
-ymin, Δy, ymax = 0, 0.04, 2
+xmin, Δx, xmax = 0, 0.1, 3
+ymin, Δy, ymax = 0, 0.1, 2
 
 # Set time domain and discrete time spacing
 Δt = 0.05
