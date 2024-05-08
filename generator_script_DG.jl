@@ -48,16 +48,14 @@ println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
-# All fixed, I've switched out "IDL" for "InfGen".
+#HERE YOU CAN REPLACE WITH THE PLOT_SLICES CODE I SENT BY EMAIL...ALSO FOR THE SEBA PLOTTING BELOW
 @time plot_spatemp_InfGen(grid, Λ, V)
 @time plot_9vecs_InfGen(grid, Λ, V)
 
 # Calculate SEBA Vectors from the leading two eigenvectors
 seba_inds = [1 , 2] 
-
 Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
-
 @time plot_SEBA_InfGen(grid, Σ)
 
 # Save the results to an HDF5 file (if desired)
