@@ -27,15 +27,6 @@ println("The median of the speeds is... $F_median")
 println("The calculated ϵ value is... $ϵ")
 # Value of ϵ recorded: 0.05360933244348242
 
-# Create a vector of generators for each discrete time point
-Gvec = []
-for t ∈ T_range
-
-    G = make_generator(d, grid, x -> F(t, x), ϵ)
-    push!(Gvec, G)
-
-end
-
 # Set temporal diffusion parameter strength
 a = sqrt(1.1 * F_median * (grid.Δ_x)) / 3
 println("The initial a value is... $a")
@@ -43,13 +34,22 @@ println("The initial a value is... $a")
 a = 0.1
 # Value of a used: 0.1
 
-println("Making inflated generator...")
-@time 𝐆 = make_inflated_generator(Gvec, Δt, a)
+@time begin println("Making inflated generator...")
+    # Create a vector of generators for each discrete time point
+    Gvec = []
+    for t ∈ T_range
+        G = make_generator(d, grid, x -> F(t, x), ϵ)
+        push!(Gvec, G)
+    end
+    # Assemble individual generators into the inflated generator
+    𝐆 = make_inflated_generator(Gvec, Δt, a)
+end
 
-println("Computing inflated eigenvalues...")
+println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
+<<<<<<< HEAD
 @time plot_slices(V, grid, 3)
 
 # Calculate SEBA Vectors from the leading two eigenvectors
@@ -64,6 +64,20 @@ println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 # I used to use Dates so that the approximate date and time on which the eigenbasis/SEBA data file was created can be included in the file name.
 
 #using Dates
+=======
+#HERE YOU CAN REPLACE WITH THE PLOT_SLICES CODE I SENT BY EMAIL...ALSO FOR THE SEBA PLOTTING BELOW
+@time plot_spatemp_InfGen(grid, Λ, V)
+@time plot_9vecs_InfGen(grid, Λ, V)
+
+# Calculate SEBA Vectors from the leading two eigenvectors
+seba_inds = [1 , 2] 
+Σ, ℛ = SEBA(real.(V[:, seba_inds]))
+println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
+@time plot_SEBA_InfGen(grid, Σ)
+
+# Save the results to an HDF5 file (if desired)
+using Dates
+>>>>>>> fb3fb6853e76ea5a4be52cf735e617bf99e3899d
 using HDF5
 #time_now = now()
 #name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
