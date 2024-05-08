@@ -28,7 +28,7 @@ println("The calculated ϵ value is... $ϵ")
 
 # Create a vector of generators for each discrete time point
 Gvec = []
-@showprogress for t ∈ T_range
+for t ∈ T_range
 
     G = make_generator(d, grid, x -> F(t, x), ϵ)
     push!(Gvec, G)

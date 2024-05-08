@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, ProgressMeter
+using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics
 
 #create a data structure for the grid
 struct Grid
