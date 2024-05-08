@@ -53,7 +53,7 @@ println("Computing inflated generator eigenvalues...")
 
 #MISSING PLOT OF THE SPECTRUM
 
-println("Plotting slices...")
+println("Plotting eigenvector time slices...")
 #WHY ARE WE PLOTTING THE THIRD EIGENVECTOR AND NOT THE SECOND?
 @time plot_slices(V, grid, 3)
 
@@ -65,11 +65,12 @@ seba_inds = [1, 3]
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
 # WE DON'T NEED SPECIAL SEBA PLOTTING CODE, JUST INPUT SEBA VECTORS INTO PLOT_SLICES
+println("Plotting SEBA vector time slices...")
 @time plot_SEBA(Σ, grid, 0) # For a max(SEBA) plot, insert 0 for vecnum
 
 # Save the results to an HDF5 file 
+println("Saving variables...")
 #name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
 name_save_file = "InfGen_Results_SwitchingDoubleGyre.h5"
-
 #A DESCRIPTION OF WHAT IS ACTUALLY BEING SAVED WOULD BE HELPFUL, SINCE IT SEEMS YOU DON'T SAVE THE INPUTS
 @time save_results(grid, Λ, V, Σ, name_save_file)
