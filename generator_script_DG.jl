@@ -4,15 +4,14 @@ include("generator_functions_DG.jl")
 #WE DON'T NEED THIS BECAUSE IT IS IN GENERATOR_FUNCTIONS
 include("plot_slices.jl")
 
-println("Setting up the grid...")
-xmin, Δx, xmax = 0, 0.1, 3
-ymin, Δy, ymax = 0, 0.1, 2
-
 # Set time domain and discrete time spacing
 Δt = 0.05
 T_range = 0:Δt:1
 
-# Create grid and indexing
+# Create spatial domain grid and indexing
+println("Setting up the grid...")
+xmin, Δx, xmax = 0, 0.1, 3
+ymin, Δy, ymax = 0, 0.1, 2
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
 
 # Define the switching double gyre vector field
