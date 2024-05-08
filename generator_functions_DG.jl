@@ -177,6 +177,7 @@ function plot_slices(V, grid, vecnum)
         tm = (t - 1) / (T - 1)
         Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=:RdBu, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
+    display(gif(anim, fps=10))
 
     # plot individual time frames
     fig = []
@@ -184,10 +185,7 @@ function plot_slices(V, grid, vecnum)
         tm = (t - 1) / (T - 1)
         push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=cgrad(:RdBu, rev=true), title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
     end
-
-    # display the frames and the animation
-    display(plot(fig[1:2:end]..., layout=(3, 5)))
-    display(gif(anim, fps=10))
+    display(plot(fig[1:2:end]..., layout=(3, 4)))
 
 end
 
@@ -212,6 +210,7 @@ function plot_SEBA(Σ, grid, sebanum)
             Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
         end
     end
+    display(gif(anim, fps=10))
 
     # plot individual time frames
     fig = []
@@ -226,10 +225,8 @@ function plot_SEBA(Σ, grid, sebanum)
             push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
         end
     end
+    display(plot(fig[1:2:end]..., layout=(3, 4)))
     
-    # display the frames and the animation
-    display(plot(fig[1:2:end]..., layout=(3, 5)))
-    display(gif(anim, fps=10))
 
 end
 

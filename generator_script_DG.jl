@@ -51,6 +51,8 @@ end
 println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
+#MISSING PLOT OF THE SPECTRUM
+
 println("Plotting slices...")
 #WHY ARE WE PLOTTING THE THIRD EIGENVECTOR AND NOT THE SECOND?
 @time plot_slices(V, grid, 3)
