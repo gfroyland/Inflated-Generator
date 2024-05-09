@@ -4,7 +4,7 @@ include("generator_functions_DG.jl")
 # Set time domain and discrete time spacing
 Δt = 0.05
 T_range = 0:Δt:1
-
+# Sample Comment
 # Create a grid and indexing for the spatial domain [xmin,xmax]x[ymin,ymax]
 println("Setting up the grid...")
 xmin, Δx, xmax = 0, 0.1, 3 # Why has ℓ been changed to 0.1?
