@@ -131,13 +131,10 @@ function make_inflated_generator(Gvec, Δt, a)
     return 𝐆
 end
 
-#FROM HERE WE SHOULD DECIDE WHAT TO INCLUDE IN THE PUBLIC VERSION
+"`plot_spectrum(grid, Λ, V)` plots the length(Λ) leading eigenvalues of the spectrum of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the meanvariance of eigenvectors test."
+function plot_spectrum(grid, Λ, V)
 
-"`plot_spectrum_meanvar(grid, Λ, V)` plots the length(Λ) leading eigenvalues of the spectrum of the inflated generator, along with the meanvariance plot to test each eigenvalue to see if it is spatial or temporal."
-function plot_spectrum_meanvar(grid, Λ, V)
-
-    #plot inflated spectrum
-    display(scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
+    # Calculate Means of Eigenvector Variances 
 
     N = length(grid.x_range) * length(grid.y_range)
     T = Int(size(V)[1] / N)
@@ -146,88 +143,77 @@ function plot_spectrum_meanvar(grid, Λ, V)
 
     meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
 
-    # Visualise the results
+    # Plot the Spectrum, distinguishing spatial eigenvalues from temporal ones
+    
+    spat_inds = findall(x->x>1e-10,meanvariance)
+    temp_inds = findall(x->x<1e-10,meanvariance)
 
-    x_disp = 1:K
-    display(scatter(x_disp, meanvariance)) # Remove all similar cases of Plots.etc
+    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
 
-    return meanvariance
-    # Plot spectrum with circles and crosses to distinguish spatial vs temporal eigvals in automated fashion
-    #should be close to zero for temporal eigenfunctions (and the trivial eigenfunction) and far from zero for spatial eigenfunctions
+    popfirst!(temp_inds) 
+    append!(spat_inds,1)
+
+    scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
+    scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
+    xlabel!("Re(Λ_k)")
+    display(ylabel!("Im(Λ_k)"))
 
 end
 
-"`plot_slices(V, grid, vecnum)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid`."
-function plot_slices(V, grid, vecnum) # Add colourscheme as argument, add T_range as argument for time
-# If max_seba, V is the maximum SEBA vector, let vecnum = 1
-# vecnum supplied, should be real and spatial (ideally Λ_2)
-    spacelength = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(V)[1] / spacelength)
+"`plot_slices(V, vecnum, grid, T_range, col_scheme)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user."
+function plot_slices(V, vecnum, grid, T_range, col_scheme)
 
-    # ℓ^2-normalize each column of V and scale so that entries are close to ±1 
-    V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+    spacelength = length(grid.x_range) * length(grid.y_range)
+    T = length(T_range)
+
+    # If we're plotting V, it should be ℓ^2-normalized before being passed in to this function. 
+    # V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
 
     #create a T-vector of time-slices (copies of space)
     sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
 
     # find a common colour range
-    cmax = maximum(abs.(real(V[:, vecnum])))
+    col_lims = (minimum((V[:, vecnum])),maximum((V[:, vecnum])))
 
     # create an animation of frames of the eigenvector
     anim = @animate for t = 1:T
-        tm = (t - 1) / (T - 1)
-        contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=:RdBu, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        tm = T_range[t]
+        contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
     display(gif(anim, fps=10))
 
     # plot individual time frames
     fig = []
     for t = 1:T
-        tm = (t - 1) / (T - 1)
-        push!(fig, contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=cgrad(:RdBu, rev=true), title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        tm = T_range[t]
+        push!(fig, contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
     end
     display(plot(fig[1:2:end]..., layout=(3, 4)))
 
 end
 
-function save_results(grid, Λ, V, Σ, filename)
-# Add comments to explain what this function does
-# Save the time domain as well
-# No manipulation of V
-# Use both HDF5 and JLD2 to save (split real and imaginary parts in HDF5 only); jldsave for JLD2
-# e.g. jldsave("name.jld2"; Λ, V, Σ, T)
-# to load: load("name.jld2",Λ) dictionary object, variable names are keys.
-    file_ID = h5open(filename, "w")
+"`save_results(grid, T_range, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for further use later. Data saved: Grid ranges in x and y, the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
+function save_results(grid, T_range, Λ, V, Σ, filename)
+    
+    # Save data to JLD2 file
+    filename_JLD2 = filename * ".jld2"
+    jldsave(filename_JLD2; grid.x_range, grid.y_range, T_range, Λ, V, Σ)
 
-    file_ID["longitude"] = grid.x_range
-    file_ID["latitude"] = grid.y_range
+    # Save data to HDF5 file
+    filename_HDF5 = filename * ".h5"
+    file_ID = h5open(filename_HDF5, "w")
 
-    Σ_max = maximum(Σ, dims=2)
+    file_ID["x_range"] = grid.x_range
+    file_ID["y_range"] = grid.y_range
+    file_ID["T_range"] = collect(T_range) # The collect() function must be used or an error will be thrown
 
-    file_ID["IDL_Lambda_Real"] = real.(Λ)
-    file_ID["IDL_Lambda_Imag"] = imag.(Λ)
+    file_ID["Eigvals_Real"] = real.(Λ)
+    file_ID["Eigvals_Imag"] = imag.(Λ)
 
-    spacelength = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(V)[1] / spacelength)
+    file_ID["Eigvecs_Real"] = real.(V)
+    file_ID["Eigvecs_Imag"] = imag.(V)
 
-    sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
-
-    sliceΣ = [Σ[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
-
-    for τ ∈ 1:T
-
-        for φ ∈ 1:size(V, 2)
-            varname = "IDL_v_" * lpad(φ, 2, "0") * "_t" * lpad(τ, 2, "0")
-            file_ID[varname] = real.(reshape(sliceV[τ][:, φ], length(grid.y_range), length(grid.x_range)))
-        end
-        for ψ ∈ 1:size(Σ, 2)
-            varname = "IDL_SEBA_" * lpad(ψ, 2, "0") * "_t" * lpad(τ, 2, "0")
-            file_ID[varname] = real.(reshape(sliceΣ[τ][:, ψ], length(grid.y_range), length(grid.x_range)))
-        end
-
-        varname = "IDL_SEBA_Max_t" * lpad(τ, 2, "0")
-        file_ID[varname] = real.(reshape(Σ_max[(τ-1)*spacelength.+(1:spacelength)], length(grid.y_range), length(grid.x_range)))
-    end
+    file_ID["SEBA"] = Σ
 
     close(file_ID)
 
