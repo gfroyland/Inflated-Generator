@@ -190,48 +190,6 @@ function plot_slices(V, grid, vecnum) # Add colourscheme as argument, add T_rang
 
 end
 
-#WHY DO WE NEED A SEPARATE FUNCTION TO PLOT SEBA VECTORS?  DON'T WE JUST INPUT SEBA VECTORS INSTEAD OF EIGENVECTORS INTO THE PREVIOUS FUNCTION?
-function plot_SEBA(Σ, grid, sebanum)
-
-    spacelength = length(grid.x_range) * length(grid.y_range)
-    T = Int(size(Σ)[1] / spacelength)
-
-    #create a T-vector of time-slices (copies of space)
-    sliceΣ = [Σ[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
-
-    # create an animation of frames of the SEBA vector
-    if (sebanum == 0) # Plot the max of all SEBA vectors
-        anim = @animate for t = 1:T
-            tm = (t - 1) / (T - 1)
-            Plots.contourf(grid.x_range, grid.y_range, reshape(maximum(sliceΣ[t][:, :], dims=2), length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
-        end
-    else
-        anim = @animate for t = 1:T
-            tm = (t - 1) / (T - 1)
-            Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
-        end
-    end
-    display(gif(anim, fps=10))
-
-    # plot individual time frames
-    fig = []
-    if (sebanum == 0) # Plot the max of all SEBA vectors
-        for t = 1:T
-            tm = (t - 1) / (T - 1)
-            push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(maximum(sliceΣ[t][:, :], dims=2), length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
-        end
-    else
-        for t = 1:T
-            tm = (t - 1) / (T - 1)
-            push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(sliceΣ[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=(0, 1), c=:Reds, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
-        end
-    end
-    display(plot(fig[1:2:end]..., layout=(3, 4)))
-    
-
-end
-
-
 function save_results(grid, Λ, V, Σ, filename)
 # Add comments to explain what this function does
 # Save the time domain as well
