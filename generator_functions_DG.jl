@@ -137,7 +137,7 @@ end
 function plot_spectrum_meanvar(grid, Λ, V)
 
     #plot inflated spectrum
-    display(Plots.scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
+    display(scatter(Λ, title="$(length(Λ)) eigenvalues with largest real part, a = $a"))
 
     N = length(grid.x_range) * length(grid.y_range)
     T = Int(size(V)[1] / N)
@@ -149,17 +149,18 @@ function plot_spectrum_meanvar(grid, Λ, V)
     # Visualise the results
 
     x_disp = 1:K
-    display(Plots.scatter(x_disp, meanvariance))
+    display(scatter(x_disp, meanvariance)) # Remove all similar cases of Plots.etc
 
     return meanvariance
-
+    # Plot spectrum with circles and crosses to distinguish spatial vs temporal eigvals in automated fashion
     #should be close to zero for temporal eigenfunctions (and the trivial eigenfunction) and far from zero for spatial eigenfunctions
 
 end
 
 "`plot_slices(V, grid, vecnum)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid`."
-function plot_slices(V, grid, vecnum)
-
+function plot_slices(V, grid, vecnum) # Add colourscheme as argument, add T_range as argument for time
+# If max_seba, V is the maximum SEBA vector, let vecnum = 1
+# vecnum supplied, should be real and spatial (ideally Λ_2)
     spacelength = length(grid.x_range) * length(grid.y_range)
     T = Int(size(V)[1] / spacelength)
 
@@ -175,7 +176,7 @@ function plot_slices(V, grid, vecnum)
     # create an animation of frames of the eigenvector
     anim = @animate for t = 1:T
         tm = (t - 1) / (T - 1)
-        Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=:RdBu, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=:RdBu, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
     display(gif(anim, fps=10))
 
@@ -183,7 +184,7 @@ function plot_slices(V, grid, vecnum)
     fig = []
     for t = 1:T
         tm = (t - 1) / (T - 1)
-        push!(fig, Plots.contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=cgrad(:RdBu, rev=true), title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        push!(fig, contourf(grid.x_range, grid.y_range, reshape(real.(sliceV[t][:, vecnum]), length(grid.y_range), length(grid.x_range)), clims=(-cmax, cmax), c=cgrad(:RdBu, rev=true), title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
     end
     display(plot(fig[1:2:end]..., layout=(3, 4)))
 
@@ -232,7 +233,12 @@ end
 
 
 function save_results(grid, Λ, V, Σ, filename)
-
+# Add comments to explain what this function does
+# Save the time domain as well
+# No manipulation of V
+# Use both HDF5 and JLD2 to save (split real and imaginary parts in HDF5 only); jldsave for JLD2
+# e.g. jldsave("name.jld2"; Λ, V, Σ, T)
+# to load: load("name.jld2",Λ) dictionary object, variable names are keys.
     file_ID = h5open(filename, "w")
 
     file_ID["longitude"] = grid.x_range
