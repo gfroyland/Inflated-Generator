@@ -1,13 +1,13 @@
-using HDF5
+using HDF5, JLD2
 include("generator_functions_DG.jl")
 
 # Set time domain and discrete time spacing
 Δt = 0.05
 T_range = 0:Δt:1
-# Sample Comment
+
 # Create a grid and indexing for the spatial domain [xmin,xmax]x[ymin,ymax]
 println("Setting up the grid...")
-xmin, Δx, xmax = 0, 0.1, 3 # Why has ℓ been changed to 0.1?
+xmin, Δx, xmax = 0, 0.1, 3 
 ymin, Δy, ymax = 0, 0.1, 2
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
 
@@ -19,23 +19,17 @@ F(t, x) = [(-π / 2) * sin(π * (α(t) * x[1]^2 + β(t) * x[1])) * cos(π * x[2]
 
 F_median = median(norm(F(t, x)) for t ∈ T_range for x ∈ grid.centres)
 println("The median of the speeds is... $F_median")
-# Value of F_median recorded (ℓ = 0.04): 0.7184901312589542
-# Value of F_median recorded (ℓ = 0.1): 0.7211526065909744
 
 # Set the spatial diffusion parameter ϵ
 ϵ = sqrt(0.1 * F_median * (grid.Δ_x))
 println("The calculated ϵ value is... $ϵ")
-# Value of ϵ recorded (ℓ = 0.04): 0.05360933244348242
-# Value of ϵ recorded (ℓ = 0.1): 0.08492070457732757
 
 # Set temporal diffusion parameter strength
-a = sqrt(1.1 * F_median * (grid.Δ_x)) / 3
+L_max_x = (grid.x_max - grid.x_min)
+L_max_y = (grid.y_max - grid.y_min)
+a = sqrt(1.1 * F_median * (grid.Δ_x)) / (max(L_max_x,L_max_y)) # Initial heuristic for a
 println("The initial a value is... $a")
-# Value of a recorded (ℓ = 0.04): 0.05926734699215261
-# Value of a recorded (ℓ = 0.1): 0.0938833713385373
-a = 0.115
-# Value of a used (ℓ = 0.04): 0.1
-# Value of a used (ℓ = 0.1): 0.115
+a = 0.115 # a chosen to approximately match the leading eigenvalues
 
 @time begin println("Making inflated generator...")
     # Create a vector of generators for each discrete time point
@@ -51,27 +45,35 @@ end
 println("Computing inflated generator eigenvalues...")
 @time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
-#MISSING PLOT OF THE SPECTRUM
-@time plot_spectrum_meanvar(grid, Λ, V)
+# PLOT OF THE SPECTRUM
+@time plot_spectrum(grid, Λ, V)
 
 println("Plotting eigenvector time slices...")
-#WHY ARE WE PLOTTING THE THIRD EIGENVECTOR AND NOT THE SECOND?
-@time plot_slices(V, grid, 2)
+# Plot slices of leading spatial eigenvector (V_2)
+# Make sure to ℓ^2-normalise V before sending it through
+
+V_norm = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+vecnum = 2
+@time plot_slices(real.(V_norm), vecnum, grid, T_range, :RdBu) 
+# We have to use real() when producing plots for V, or else an error will be thrown when attempting to plot the eigenvectors, even if imag(V[:,vecnum]) = zeros(size(V,1)), as V is a matrix of complex type.
 
 # Calculate SEBA Vectors from the leading two eigenvectors
-# UNCLEAR HOW VECTORS 1 AND 3 ARE THE LEADING TWO EIGENVECTORS
 println("Computing SEBA vectors...")
 seba_inds = [1, 2]
 @time Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
-# WE DON'T NEED SPECIAL SEBA PLOTTING CODE, JUST INPUT SEBA VECTORS INTO PLOT_SLICES
+# Plot individual SEBA vectors, followed by the maximum of the two
 println("Plotting SEBA vector time slices...")
-@time plot_SEBA(Σ, grid, 0) # For a max(SEBA) plot, insert 0 for vecnum
 
-# Save the results to an HDF5 file 
+sebanum = 1
+@time plot_slices(Σ, sebanum, grid, T_range, :Reds)
+
+Σ_max = maximum(Σ,dims=2)
+@time plot_slices(Σ_max, 1, grid, T_range, :Reds)
+
+# Save the results to HDF5 and JLD2 files 
+# Data to save: Vectors of grid ranges in x and y, time range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
 println("Saving variables...")
-#name_save_file = "InfGen_Results_DG_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
-name_save_file = "InfGen_Results_SwitchingDoubleGyre.h5"
-#A DESCRIPTION OF WHAT IS ACTUALLY BEING SAVED WOULD BE HELPFUL, SINCE IT SEEMS YOU DON'T SAVE THE INPUTS
-@time save_results(grid, Λ, V, Σ, name_save_file)
+name_save_file = "InfGen_Results_SwitchingDoubleGyre"
+@time save_results(grid, T_range, Λ, V, Σ, name_save_file)
