@@ -18,8 +18,6 @@ num_time_steps = length(date_range)
 
 # conversion factor from degrees to metres:  mean circumference of Earth at the equator is 12756000m and there are 2π radians in a circle, so to obtain metres from degrees at the equator we multiply by 12756000/2π
 deg2metr = 40075000/360
-# conversion factor from days to seconds
-# day2secs = 86400
 
 # Before we begin, we calculate a suitable value of ϵ for the generator
 # calculations below, using a mean of the norm of the wind velocity vectors
@@ -47,9 +45,8 @@ for c ∈ 1:length(centres)
     ℓ[c] = grid.lonspacing * cosd(centres[c][2]) * deg2metr
 end
 
-ℓ_median = median(ℓ) # This is supposed to read \bar{\ell}, writing \bar then \ell throws a parsing error.
+ℓ_median = median(ℓ)
 println("The calculated ℓ_median is... $ℓ_median")
-# ℓ_median values: West 103617.76195096408
 
 # Calculate median of the speeds within 𝕄
 # Read in longitude and latitude data from our velocity files, and use these to find appropriate index ranges pertaining to the spatial extent of 𝕄.
@@ -80,9 +77,6 @@ for τ ∈ 1:length(date_range)
     v_data = read(file_ID, "/vcomp")
     v_data = reverse(v_data, dims=2)
 
-    #do not hard code values without explanation.
-    #ideally call these some descriptive variable names with comment.
-    
     # speeds_now contains all of the wind speeds calculated for this particular time instance...
     speeds_now = sqrt.(u_data[M_lons_index_range,M_lats_index_range].^2 .+ v_data[M_lons_index_range,M_lats_index_range].^2)
     
@@ -95,37 +89,8 @@ end
 
 v̄ = median(speeds_over_𝕄)
 println("The median of the speeds is... $v̄")
-# vel_median values: West 10.353924412378346
 ϵ = sqrt(0.1*v̄*ℓ_median)
 println("The calculated ϵ value is... $ϵ")
-# ϵ values: West 327.54396270120674
-
-#=
-println("Calculating a suitable value for ϵ...")
-
-ϵ = 0
-
-for curr_date ∈ date_range
-
-    name_of_file = "ERA5_atmos_6Hourly_Summer2003/ERA5_atmos_6HR_" * string(year(curr_date)) * lpad(month(curr_date), 2, "0") * lpad(day(curr_date), 2, "0") * "_" * lpad(hour(curr_date), 2, "0") * "00.h5"
-    file_ID = h5open(name_of_file)
-
-    u_now = read(file_ID, "/ucomp")
-    v_now = read(file_ID, "/vcomp")
-
-    vel_norms = sqrt.(u_now.^2 + v_now.^2)
-    #vel_norms_m = mean(vel_norms[:]) # m can stand for mean or median
-    vel_norms_m = median(vel_norms[:])
-
-    global ϵ = ϵ + (vel_norms_m/num_time_steps)
-
-    close(file_ID)
-
-end
-
-ϵ = 0.05*ϵ
-println("The calculated ϵ value is... $ϵ")
-=#
 
 Gvec = []
 
@@ -156,15 +121,12 @@ Gvec = []
         u_data = read(file_ID, "/ucomp")
         v_data = read(file_ID, "/vcomp")
 
-        #u_data = -u_data
-        #v_data = -v_data
-
     end
 
     println("Creating interpolant...")
 
     @time Iplt_zonal, Iplt_meridional = get_linear_interpolant(lons_data, lats_data, u_data, v_data)
-    F(x) = [(1).*Iplt_zonal(x[1], x[2]), (1).*Iplt_meridional(x[1], x[2])]
+    F(x) = [Iplt_zonal(x[1], x[2]), Iplt_meridional(x[1], x[2])]
 
     println("Creating generator...")
 
@@ -183,9 +145,8 @@ end
 
 L_max_lon = (grid.lonmax - grid.lonmin)*cosd(grid.latmin)*deg2metr
 L_max_lat = (grid.latmax - grid.latmin)*deg2metr
-a = ((end_date-start_date)/Day(1))*sqrt(1.1*v̄*ℓ_median)/(max(L_max_lon,L_max_lat)) # East: 0.0023268717590320966
+a = ((end_date-start_date)/Day(1))*sqrt(1.1*v̄*ℓ_median)/(max(L_max_lon,L_max_lat))
 println("The heuristic for a is... $a")
-# a: 0.004337229401376686
 
 a = 0.0045
 
@@ -197,19 +158,24 @@ println("Computing inflated eigenvalues...")
 println(collect(Λ))
 
 println("Plotting slices...")
-@time plot_slices(Λ, V, grid, 2, a)
-@time plot_spatemp_IDL(grid, V)
-#@time plot_9vecs_IDL(grid, V, date_range)
-#@time plot_9morevecs_IDL(grid, V, date_range)
-#@time plot_Nvecs_IDL(grid, V, date_range)
-#=
+@time plot_spectrum(grid, Λ, V)
+
+vecnum = 2
+time_hop = 8 # Plot every time_hopth slice after start_date (time gap of time_hop*time_step)
+figlayout = (3, 4)
+@time plot_slices(real.(V), vecnum, time_hop, grid, date_range, :RdBu, figlayout)
+
 seba_inds = [1 ; 2]
 Σ, ℛ = SEBA(real.(V[:, seba_inds]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
-@time plot_SEBA_IDL(grid, Σ, date_range)
-#@time make_SEBA_IDL(grid, V, seba_inds, date_range)
 
-time_now = now()
-name_save_file = "IDL_Results_EuroBlock_West_5DayExtension_" * string(year(time_now)) * lpad(month(time_now), 2, "0") * lpad(day(time_now), 2, "0") * "_" * lpad(hour(time_now), 2, "0") * lpad(minute(time_now), 2, "0") * ".h5"
-@time save_results_IDL(grid, Λ, V, Σ, name_save_file)
-=#
+println("Plotting SEBA vector time slices...")
+
+sebanum = 1
+@time plot_slices(Σ, sebanum, time_hop, grid, date_range, :Reds, figlayout)
+
+# Save the results to HDF5 and JLD2 files 
+# Data to save: Vectors of lon/lat ranges, date range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
+println("Saving variables...")
+name_save_file = "InfGen_Results_EuroBlock_West"
+@time save_results(grid, date_range, Λ, V, Σ, name_save_file)
