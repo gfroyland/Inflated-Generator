@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, Interpolations, QuadGK, SparseArrays, Arpack, Statistics, ProgressMeter, GMT
+using Dates, Plots, LinearAlgebra, Interpolations, QuadGK, SparseArrays, Arpack, Statistics, ProgressMeter, HDF5, JLD2
 
 #create a data structure for the grid;  it might be expanded later to include e.g. G, spectrum, evecs, etc... or other items
 struct Grid
@@ -58,16 +58,13 @@ function make_generator(d, grid, F, ϵ)
     # Spatial coordinates are in degrees lon/lat (info contained in d and grid)
     # Velocities (the output of F) are in m.s⁻¹
     # ϵ is a diffusion parameter, making a crude finite-difference diffusion on a 5-point stencil 
-    # CHECK THAT ϵ IS USED CORRECTLY WITH UNEQUAL BOX SIZES
-
+    
     #conversion factor from degrees to metres:  mean circumference of Earth at the equator is 40075000m and there are 2π radians (360 degrees) in a circle, so to obtain metres from degrees at the equator we multiply by 40075000/360
     deg2metr = 40075000/360
 
     #create list of box centres
     centres = collect(keys(d))
-    #compute volumes of cells. constant at the moment, but adjust later
-    #WHEN MAKING IT NONCONSTANT LATER, BE SURE TO MATCH THE CORRECT INDEXING IN THE DICTIONARY AND ENSURE IT IS INDEXED CORRECTLY IN THE G COMPUTATION
-    #GF: I BELIEVE THIS IS FIXED NOW.
+    
     volume = zeros(length(centres))
     for c ∈ centres
         volume[d[c]] = grid.lonspacing * grid.latspacing * cosd(c[2]) * deg2metr^2
@@ -103,9 +100,6 @@ function make_generator(d, grid, F, ϵ)
         rightc = round.(c + Δlon, digits=6)
         if rightc ∈ keys(d)  #check that the box on the right exists
             #compute the entry for G corresponding to flux through the right face
-            #Because of the integration from 0 to 1 instead of 0 to the length of the face, instead of
-            #dividing by volume, I multiply by (latfacelength/volume), which is 1 over the length of the lonface.
-            #similarly in the other faces below
             #for the additional diffusion term I use the standard 5-point stencil finite-difference approximation (where the 5th diagonal element is taken care of later by ensuring row sum is zero)
             G[d[c], d[rightc]] = (quadgk(t -> max(F(rightface(c, t)) ⋅ rightnormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / (grid.lonspacing * deg2metr * cosd(c[2])) + (ϵ^2 / (2 * (grid.lonspacing *deg2metr* cosd(c[2]))^2))
         end
@@ -122,7 +116,7 @@ function make_generator(d, grid, F, ϵ)
             G[d[c], d[lowerc]] = (quadgk(t -> max(F(lowerface(c, t)) ⋅ lowernormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / (grid.latspacing *deg2metr) + (ϵ^2 / (2 * (grid.latspacing*deg2metr)^2))
         end
     end
-    #G = G - spdiagm(vec(sum(G, dims=2)))
+    
     #place negative row sums on the diagonal of G so that the row sum of G is now zero.
     G = G - spdiagm(vec(sum(spdiagm(1 ./ volume) * G * spdiagm(volume), dims=2)))
 
@@ -161,6 +155,94 @@ function make_inflated_generator(Gvec, time_step, a)
     return 𝐆
 end
 
+function plot_spectrum(grid, Λ, V)
+
+    # Calculate Means of Eigenvector Variances 
+
+    N = length(grid.lonrange) * length(grid.latrange)
+    T = Int(size(V)[1] / N)
+
+    K = size(V, 2)
+
+    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
+
+    # Plot the Spectrum, distinguishing spatial eigenvalues from temporal ones
+    
+    spat_inds = findall(x->x>1e-10,meanvariance)
+    temp_inds = findall(x->x<1e-10,meanvariance)
+
+    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
+
+    popfirst!(temp_inds) 
+    append!(spat_inds,1)
+
+    scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
+    scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
+    xlabel!("Re(Λ_k)")
+    display(ylabel!("Im(Λ_k)"))
+
+end
+
+function plot_slices(V, vecnum, time_step, grid, date_range, col_scheme, figlayout)
+
+    spacelength = length(grid.lonrange) * length(grid.latrange)
+    T = length(date_range)
+
+    #create a T-vector of time-slices (copies of space)
+    sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
+
+    # find a common colour range
+    col_lims = (minimum((V[:, vecnum])),maximum((V[:, vecnum])))
+
+    # create an animation of frames of the eigenvector
+    anim = @animate for t = 1:time_step:T
+        title_now = Dates.format(date_range[t], "dd/mm HH:MM")
+        contourf(grid.lonrange, grid.latrange, reshape(sliceV[t][:, vecnum], length(grid.latrange), length(grid.lonrange)), clims=col_lims, c=col_scheme, xlabel="̊ E", ylabel="̊ N", title=title_now, linewidth=0, levels=100)
+    end
+    display(gif(anim, fps=10))
+
+    # plot individual time frames
+    fig = []
+    for t = 1:time_step:T
+        title_now = Dates.format(date_range[t], "dd/mm HH:MM")
+        push!(fig, contourf(grid.lonrange, grid.latrange, reshape(sliceV[t][:, vecnum], length(grid.latrange), length(grid.lonrange)), clims=col_lims, c=col_scheme, title=title_now, linewidth=0, levels=100, aspectratio=1, legend=:none))
+    end
+    display(plot(fig..., layout=figlayout))
+
+end
+
+function save_results(grid, date_range, Λ, V, Σ, filename)
+    
+    # Save data to JLD2 file
+    filename_JLD2 = filename * ".jld2"
+    jldsave(filename_JLD2; grid.lonrange, grid.latrange, date_range, Λ, V, Σ)
+
+    # Save data to HDF5 file
+    filename_HDF5 = filename * ".h5"
+    file_ID = h5open(filename_HDF5, "w")
+
+    file_ID["lonrange"] = grid.lonrange
+    file_ID["latrange"] = grid.latrange
+
+    date_range_str = String[]
+    for i = 1:length(date_range)
+        push!(date_range_str,Dates.format(date_range[i],"dd/mm/yy HH:MM"))
+    end
+
+    file_ID["date_range"] = collect(date_range_str) # The collect() function must be used or an error will be thrown
+
+    file_ID["Eigvals_Real"] = real.(Λ)
+    file_ID["Eigvals_Imag"] = imag.(Λ)
+
+    file_ID["Eigvecs_Real"] = real.(V)
+    file_ID["Eigvecs_Imag"] = imag.(V)
+
+    file_ID["SEBA"] = Σ
+
+    close(file_ID)
+
+end
+#=
 function quiverplus(xrange, yrange, F, sparsity)
     # e.g. F(x,y)=[-y, x]
     # quiverplus(-1:0.1:1, -1:0.1:1, F, 6)
@@ -823,4 +905,5 @@ end
 Gindex = 1
 dindex = findall(values(d) .== Gindex)
 collect(d)[dindex]
+=#
 =#
