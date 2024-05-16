@@ -11,7 +11,7 @@ include("generator_functions_lininterp.jl")
 # DateTime(Year,Month,Day,Hour,Minute,Second) [24 Hour Format]
 start_date = DateTime(2003, 7, 26, 0, 0, 0)
 end_date = DateTime(2003, 8, 6, 0, 0, 0)
-time_step = Hour(6) # time step in hours (must be a multiple of 6)
+time_step = Hour(12) # time step in hours (must be a multiple of 6)
 
 date_range = start_date:time_step:end_date
 num_time_steps = length(date_range)
