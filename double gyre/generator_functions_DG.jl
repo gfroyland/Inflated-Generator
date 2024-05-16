@@ -197,7 +197,7 @@ function save_results(grid, T_range, Λ, V, Σ, filename)
     
     # Save data to JLD2 file
     filename_JLD2 = filename * ".jld2"
-    jldsave(filename_JLD2; grid.x_range, grid.y_range, T_range, Λ, V, Σ)
+    jldsave(filename_JLD2; grid, T_range, Λ, V, Σ)
 
     # Save data to HDF5 file
     filename_HDF5 = filename * ".h5"
