@@ -14,7 +14,7 @@ struct Grid
 end
 
 #include the Sparse EigenBasis Approximation function
-include("SEBA.jl")
+include("../SEBA.jl")
 
 "`make_dict_grid` creates a dictionary to set up our indexing of the grid and fill the grid struct"
 function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
