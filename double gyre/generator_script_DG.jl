@@ -1,4 +1,3 @@
-using HDF5, JLD2
 include("generator_functions_DG.jl")
 
 # Set time domain and discrete time spacing
@@ -52,10 +51,9 @@ println("Plotting eigenvector time slices...")
 # Plot slices of leading spatial eigenvector (V_2)
 # Make sure to ℓ^2-normalise V before sending it through
 
-V_norm = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
-vecnum = 2
-@time plot_slices(real.(V_norm), vecnum, grid, T_range, :RdBu) 
-# We have to use real() when producing plots for V, or else an error will be thrown when attempting to plot the eigenvectors, even if imag(V[:,vecnum]) = zeros(size(V,1)), as V is a matrix of complex type.
+V_norm = stack(normalize.(eachcol(V))) * √(size(V, 1))
+vector_index_to_plot = 2
+@time plot_slices(real.(V_norm), vector_index_to_plot, grid, T_range, :RdBu) 
 
 # Calculate SEBA Vectors from the leading two eigenvectors
 println("Computing SEBA vectors...")
@@ -66,8 +64,8 @@ println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 # Plot individual SEBA vectors, followed by the maximum of the two
 println("Plotting SEBA vector time slices...")
 
-sebanum = 1
-@time plot_slices(Σ, sebanum, grid, T_range, :Reds)
+seba_index_to_plot = 1
+@time plot_slices(Σ, seba_index_to_plot, grid, T_range, :Reds)
 
 Σ_max = maximum(Σ,dims=2)
 @time plot_slices(Σ_max, 1, grid, T_range, :Reds)
