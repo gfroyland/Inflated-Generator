@@ -3,7 +3,7 @@ using Dates
 using Statistics
 using DelimitedFiles
 
-include("generator_functions_lininterp.jl")
+include("generator_functions.jl")
 
 # x and y arrays remain the same at each time step
 
@@ -51,7 +51,7 @@ println("The calculated ℓ_median is... $ℓ_median")
 # Calculate median of the speeds within 𝕄
 # Read in longitude and latitude data from our velocity files, and use these to find appropriate index ranges pertaining to the spatial extent of 𝕄.
 
-name_of_file = "ERA5_atmos_6Hourly_Summer2003/ERA5_atmos_6HR_" * string(year(start_date)) * lpad(month(start_date), 2, "0") * lpad(day(start_date), 2, "0") * "_" * lpad(hour(start_date), 2, "0") * "00.h5"
+name_of_file = "./velocity_data/ERA5_atmos_6Hourly_Summer2003/ERA5_atmos_6HR_" * string(year(start_date)) * lpad(month(start_date), 2, "0") * lpad(day(start_date), 2, "0") * "_" * lpad(hour(start_date), 2, "0") * "00.h5"
 file_ID = h5open(name_of_file)
 
 M_lons = read(file_ID, "/longitude")

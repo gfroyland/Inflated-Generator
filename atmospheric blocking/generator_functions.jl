@@ -35,6 +35,17 @@ function make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
     return d, grid
 end
 
+function read_velocity_data(....)
+
+    return 
+    v̄ = median(speeds_over_𝕄)
+println("The median of the speeds is... $v̄")
+ϵ = sqrt(0.1*v̄*ℓ_median)
+println("The calculated ϵ value is... $ϵ")
+
+end
+
+
 function get_linear_interpolant(lons_data, lats_data, u_data, v_data)
 
     # Here, lons_data represents longitude and lats_data represents latitude
