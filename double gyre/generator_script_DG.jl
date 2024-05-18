@@ -54,7 +54,7 @@ println("Plotting eigenvector time slices...")
 
 V_norm = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
 vecnum = 2
-@time plot_slices(real.(V_norm), vecnum, grid, T_range, :RdBu) 
+@time plot_slices(real.(V_norm), vecnum, grid, T_range, :RdBu, "movie of 2nd inflated generator eigenvector.gif") 
 # We have to use real() when producing plots for V, or else an error will be thrown when attempting to plot the eigenvectors, even if imag(V[:,vecnum]) = zeros(size(V,1)), as V is a matrix of complex type.
 
 # Calculate SEBA Vectors from the leading two eigenvectors
@@ -64,13 +64,9 @@ seba_inds = [1, 2]
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
 # Plot individual SEBA vectors, followed by the maximum of the two
-println("Plotting SEBA vector time slices...")
-
-sebanum = 1
-@time plot_slices(Σ, sebanum, grid, T_range, :Reds)
-
+println("Plotting combined SEBA vector time slices...")
 Σ_max = maximum(Σ,dims=2)
-@time plot_slices(Σ_max, 1, grid, T_range, :Reds)
+@time plot_slices(Σ_max, 1, grid, T_range, :Reds, "combined SEBA vector movie.gif")
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of grid ranges in x and y, time range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors

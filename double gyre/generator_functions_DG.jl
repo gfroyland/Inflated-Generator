@@ -161,7 +161,7 @@ function plot_spectrum(grid, Λ, V)
 end
 
 "`plot_slices(V, vecnum, grid, T_range, col_scheme)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user."
-function plot_slices(V, vecnum, grid, T_range, col_scheme)
+function plot_slices(V, vecnum, grid, T_range, col_scheme, moviefilename)
 
     spacelength = length(grid.x_range) * length(grid.y_range)
     T = length(T_range)
@@ -180,7 +180,7 @@ function plot_slices(V, vecnum, grid, T_range, col_scheme)
         tm = T_range[t]
         contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
-    display(gif(anim, fps=10))
+    display(gif(anim, moviefilename, fps=8))
 
     # plot individual time frames
     fig = []
