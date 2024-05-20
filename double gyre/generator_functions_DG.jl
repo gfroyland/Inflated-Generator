@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics
+using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, HDF5, JLD2
 
 #create a data structure for the grid
 struct Grid
@@ -14,7 +14,7 @@ struct Grid
 end
 
 #include the Sparse EigenBasis Approximation function
-include("SEBA.jl")
+include("../SEBA.jl")
 
 "`make_dict_grid` creates a dictionary to set up our indexing of the grid and fill the grid struct"
 function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
@@ -136,23 +136,24 @@ function plot_spectrum(grid, Λ, V)
 
     # Calculate Means of Eigenvector Variances 
 
+    # Number of spatial grid points
     N = length(grid.x_range) * length(grid.y_range)
+    # Number of time slices
     T = Int(size(V)[1] / N)
-
+    # Number of computed eigenvectors 
     K = size(V, 2)
 
-    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
+    averagespatialvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
 
-    # Plot the Spectrum, distinguishing spatial eigenvalues from temporal ones
-    
-    spat_inds = findall(x->x>1e-10,meanvariance)
-    temp_inds = findall(x->x<1e-10,meanvariance)
+    # Distinguish spatial eigenvalues from temporal ones
+    spat_inds = findall(x->x>1e-10,averagespatialvariance)
+    temp_inds = findall(x->x<1e-10,averagespatialvariance)
 
-    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
-
+    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but averagespatialvariance[1] ≈ 0, so correct this before plotting
     popfirst!(temp_inds) 
     append!(spat_inds,1)
 
+    # Plot the spectrum
     scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
@@ -161,13 +162,15 @@ function plot_spectrum(grid, Λ, V)
 end
 
 "`plot_slices(V, vecnum, grid, T_range, col_scheme)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user."
-function plot_slices(V, vecnum, grid, T_range, col_scheme)
+function plot_slices(V, vecnum, grid, T_range, col_scheme, moviefilename)
 
     spacelength = length(grid.x_range) * length(grid.y_range)
     T = length(T_range)
 
     # If we're plotting V, it should be ℓ^2-normalized before being passed in to this function. 
-    # V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+    if col_scheme == :RdBu
+        V = stack(normalize.(eachcol(V))) * √(size(V, 1))
+    end
 
     #create a T-vector of time-slices (copies of space)
     sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
@@ -180,7 +183,7 @@ function plot_slices(V, vecnum, grid, T_range, col_scheme)
         tm = T_range[t]
         contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
-    display(gif(anim, fps=10))
+    display(gif(anim, moviefilename, fps=8))
 
     # plot individual time frames
     fig = []
