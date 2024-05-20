@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics
+using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, HDF5, JLD2
 
 #create a data structure for the grid
 struct Grid
@@ -136,23 +136,24 @@ function plot_spectrum(grid, Λ, V)
 
     # Calculate Means of Eigenvector Variances 
 
+    # Number of spatial grid points
     N = length(grid.x_range) * length(grid.y_range)
+    # Number of time slices
     T = Int(size(V)[1] / N)
-
+    # Number of computed eigenvectors 
     K = size(V, 2)
 
-    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
+    averagespatialvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
 
-    # Plot the Spectrum, distinguishing spatial eigenvalues from temporal ones
-    
-    spat_inds = findall(x->x>1e-10,meanvariance)
-    temp_inds = findall(x->x<1e-10,meanvariance)
+    # Distinguish spatial eigenvalues from temporal ones
+    spat_inds = findall(x->x>1e-10,averagespatialvariance)
+    temp_inds = findall(x->x<1e-10,averagespatialvariance)
 
-    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
-
+    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but averagespatialvariance[1] ≈ 0, so correct this before plotting
     popfirst!(temp_inds) 
     append!(spat_inds,1)
 
+    # Plot the spectrum
     scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
@@ -167,7 +168,9 @@ function plot_slices(V, vecnum, grid, T_range, col_scheme, moviefilename)
     T = length(T_range)
 
     # If we're plotting V, it should be ℓ^2-normalized before being passed in to this function. 
-    # V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+    if col_scheme == :RdBu
+        V = stack(normalize.(eachcol(V))) * √(size(V, 1))
+    end
 
     #create a T-vector of time-slices (copies of space)
     sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
