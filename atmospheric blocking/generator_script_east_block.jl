@@ -15,19 +15,19 @@ time_step = Hour(6) # time step in hours (must be a multiple of 6)
 
 ##### finish setting parameters
 
+date_range = start_date:time_step:end_date
+num_time_steps = length(date_range)
 
 println("Setting up the grid...")
 d, grid = make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
 
 println("Reading data...")
-u_data_over_𝕄, v_data_over_𝕄, ϵ = read_velocity_data(grid)
+u_data_over_𝕄, v_data_over_𝕄, ϵ, a = read_velocity_data(grid)
 
-L_max_lon = (grid.lonmax - grid.lonmin)*cosd(grid.latmin)*deg2metr
-L_max_lat = (grid.latmax - grid.latmin)*deg2metr
-a = ((end_date-start_date)/Day(1))*√(1.1*v̄*ℓ_median)/(max(L_max_lon,L_max_lat)) 
-println("The heuristic for a is... $a")
-# hard-coded value of a to...do what?
-a = 0.0032
+#L_max_lon = (grid.lonmax - grid.lonmin)*cosd(grid.latmin)*deg2metr
+#L_max_lat = (grid.latmax - grid.latmin)*deg2metr
+#a = ((end_date-start_date)/Day(1))*√(1.1*v̄*ℓ_median)/(max(L_max_lon,L_max_lat)) 
+#println("The estimate for a is... $a")
 
 Gvec = []
 date_range = start_date:time_step:end_date
@@ -36,12 +36,12 @@ println("Creating time-slice generators...")
 @showprogress for datetime_now ∈ date_range
     
     Iplt_zonal, Iplt_meridional = get_linear_interpolant(lons_data, lats_data, u_data, v_data)
+
     F(x) = [Iplt_zonal(x[1], x[2]), Iplt_meridional(x[1], x[2])]
 
     G = make_generator(d, grid, F, ϵ)
     push!(Gvec, G)
-
-    close(file_ID)
+  
 end
 
 println("Making inflated generator...")
