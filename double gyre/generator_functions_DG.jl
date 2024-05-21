@@ -229,7 +229,7 @@ function plot_slices(V, vecnum, time_step, grid, T_range, col_scheme, moviefilen
 
 end
 
-"`save_results(grid, T_range, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for subsequent use and analysis. Data saved: Grid ranges in x and y (or the entire grid dictionary in JLD2), the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
+"`save_results(grid, T_range, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for subsequent use and analysis. Data saved: Grid ranges in x and y (or the entire grid struct in JLD2), the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
 function save_results(grid, T_range, Λ, V, Σ, filename)
     
     # Save data to a JLD2 file for use in Julia

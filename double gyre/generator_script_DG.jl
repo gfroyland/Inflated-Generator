@@ -68,7 +68,7 @@ moviefilename = "Movie of SEBA vector maxima for the Double Gyre.gif"
 @time plot_slices(Σ_max, index_to_plot, time_slice_spacing, grid, T_range, :Reds, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
-# Data to save: Vectors of grid ranges in x and y (or the entire grid dictionary in JLD2), time range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
+# Data to save: Vectors of grid ranges in x and y (or the entire grid struct in JLD2), time range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
 println("Saving variables...")
 name_save_file = "InfGen_Results_SwitchingDoubleGyre"
 @time save_results(grid, T_range, Λ, V, Σ, name_save_file)
