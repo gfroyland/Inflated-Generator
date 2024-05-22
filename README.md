@@ -3,8 +3,8 @@ This repository features Julia and MATLAB code used for the identification of qu
 families of almost-invariant sets within velocity systems through the inflated generator. Code is available
 for applying the inflated generator technique to two dynamic velocity systems:
 
-1. The Switching Double Gyre, an idealised flow system as defined in Atnip, Froyland and Koltai (2024); and
-2. ECMWF atmospheric data, observational wind velocity data used to identify two atmospheric blocking events occurring during the European Summer of 2003. The two events in question are a "West block", centred around France and taking place between August 2-12 2003, and an "East block", centred around Western Russia and taking place between July 29-August 3 2003.
+1. The Switching Double Gyre, an idealised flow system as defined in [1]; and
+2. ECMWF wind velocity data [2] used to identify two atmospheric blocking events occurring during the European Summer of 2003. The two events in question are a "West block", centred around France (further West in Europe) and taking place between August 2-12 2003, and an "East block", centred around Western Russia (further East in Europe) and taking place between July 29-August 3 2003.
 
 # Downloading and Setting Up The Repository
 
@@ -35,3 +35,7 @@ Here is an image featuring 24-hour time slices of the 10th eigenvector of the in
 <img src = "https://github.com/gfroyland/Inflated-Generator/blob/aleks/Sample_Block_Eigvec_Fig.svg?raw=true" width=600 >
 
 # References
+
+[1] Jason Atnip, Gary Froyland, and Peter Koltai. An inflated dynamic Laplacian to track the emergence and disappearance of semi-material coherent sets, 2024
+
+[2] H. Hersbach, B. Bell, P. Berrisford, G. Biavati, A. Horanyi, J. Munoz-Sabater, J. Nicolas, C. Peubey, R. Radu, I. Rozum, D. Schepers, A. Simmons, C. Soci, D. Dee, and J-N Thepaut. ERA5 hourly data on pressure levels from 1940 to present, Copernicus Climate Change Service (C3S) Climate Data Store (CDS). https://doi.org/10.24381/cds.bd0915c6, 2023.
