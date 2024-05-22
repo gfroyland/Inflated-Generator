@@ -30,7 +30,7 @@ set up of the Julia environment for this repository.
 
 # Double Gyre Sample Figure
 
-
+![DoubleGyre_3DSlices](https://github.com/gfroyland/Inflated-Generator/assets/168791783/62afbbad-f46a-4e7f-baf4-9c85405ea945)
 
 # Atmospheric Blocking Sample Figure
 
