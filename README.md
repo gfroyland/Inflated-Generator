@@ -30,8 +30,10 @@ set up of the Julia environment for this repository.
 
 # Double Gyre Sample Figure
 
-![DoubleGyre_3DSlices](https://github.com/gfroyland/Inflated-Generator/assets/168791783/62afbbad-f46a-4e7f-baf4-9c85405ea945)
+<img src = "https://github.com/gfroyland/Inflated-Generator/assets/168791783/62afbbad-f46a-4e7f-baf4-9c85405ea945" width=600 >
 
 # Atmospheric Blocking Sample Figure
+
+<img src = "https://github.com/gfroyland/Inflated-Generator/blob/aleks/Sample_Block_Eigvec_Fig.svg?raw=true" width=600 >
 
 # References
