@@ -48,7 +48,7 @@ function read_data_and_get_parameters(grid, date_range)
     name_of_file = "./data/ERA5_atmos_6HR_" * string(year(date_range[1])) * lpad(month(date_range[1]), 2, "0") * lpad(day(date_range[1]), 2, "0") * "_" * lpad(hour(date_range[1]), 2, "0") * "00.h5"
     file_ID = h5open(name_of_file)
 
-    # M_lons and M_lats are vectors containing the ranges of longitudinal 
+    # M_lons and M_lats are vectors containing the longitudinal 
     # and latitudinal coordinates (respectively) used to produce the grid over 
     # which the wind velocity data is defined.
 
@@ -83,9 +83,6 @@ function read_data_and_get_parameters(grid, date_range)
     u_data = zeros(length(M_lons),length(M_lats),num_time_steps)
     v_data = zeros(length(M_lons),length(M_lats),num_time_steps)
 
-    # Store the speeds over our domain of interest 𝕄 used to calculate the diffusion parameter values.
-    speeds_over_𝕄 = zeros(length(M_lons_index_range)*length(M_lats_index_range),num_time_steps)
-
     for τ ∈ 1:num_time_steps
 
         # Locate the data file within this directory and open it to access the data
@@ -100,12 +97,6 @@ function read_data_and_get_parameters(grid, date_range)
         v_now = read(file_ID, "/vcomp")
         v_now = reverse(v_now, dims=2)
         v_data[:,:,τ] = v_now
-        
-        # speeds_now contains all of the wind speeds calculated for this particular time instance...
-        speeds_now = sqrt.(u_now[M_lons_index_range,M_lats_index_range].^2 .+ v_now[M_lons_index_range,M_lats_index_range].^2)
-        
-        # ... which are then fed into the full array used to compute the median of the speed, which we need for computation of the diffusion parameters later.
-        speeds_over_𝕄[:,τ] = speeds_now[:]
         
         close(file_ID)
     
@@ -125,8 +116,8 @@ function read_data_and_get_parameters(grid, date_range)
     ℓ_median = median(ℓ) 
     println("The calculated ℓ_median is... $ℓ_median")
 
-    # Calculate the median of the speeds stored earlier when loading the velocity data.
-    v̄ = median(speeds_over_𝕄)
+    # Calculate the median of the speeds over 𝕄.
+    v̄ = median(sqrt.(u_data[M_lons_index_range,M_lats_index_range,:].^2 + v_data[M_lons_index_range,M_lats_index_range,:].^2))
     println("The median of the speeds is... $v̄")
 
     # Calculate the spatial diffusion parameter ϵ
