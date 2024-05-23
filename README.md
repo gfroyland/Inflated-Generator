@@ -30,12 +30,12 @@ Before using the code featured in this repository on your system, you'll need to
 # Double Gyre Sample Figure
 Here is a three-dimensional visualisation of quasi-stationary families of almost-invariant sets detected for the switching Double Gyre system. This image can be reproduced using the MATLAB script "plot_slices_3D.m" and output data obtained from running "generator_script_DG.jl". All necessary code for the inflated generator calculations on the Double Gyre system can be found in the "double gyre" directory.
 
-<img src = "https://github.com/gfroyland/Inflated-Generator/assets/168791783/62afbbad-f46a-4e7f-baf4-9c85405ea945" width=600 >
+<img src = "https://github.com/gfroyland/Inflated-Generator/assets/168791783/9c79fbd8-ee85-4250-be97-03af57e6221e" width=600 >
 
 # Atmospheric Blocking Sample Figure
 Here is an image featuring time slices (with a step of 24 hours between each one) of the 10th eigenvector of the inflated generator for the ECMWF velocity data under the East block spatial domain. This image can be reproduced upon running "generator_script_east_block.jl". All necessary code and data for the inflated generator calculations on the ECMWF atmospheric velocity system can be found in the "atmospheric blocking" directory.
 
-<img src = "https://github.com/gfroyland/Inflated-Generator/blob/aleks/Sample_Block_Eigvec_Fig.svg?raw=true" width=600 >
+<img src = "https://github.com/gfroyland/Inflated-Generator/blob/aleks/Sample_Block_SEBA_Fig.svg?raw=true" width=600 >
 
 # References
 
