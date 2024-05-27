@@ -5,8 +5,8 @@ include("./generator_functions.jl")
 ##### all parameters on the spatial and temporal domains are set below
 
 # Set longitude and latitude limits and spacing for the grid
-lonmin, lonspacing, lonmax = 15, 1, 60
-latmin, latspacing, latmax = 30, 1, 75
+lonmin, lonspacing, lonmax = 15, 1.5, 60
+latmin, latspacing, latmax = 30, 1.5, 75
 
 # Choose the time bounds of interest: DateTime(Year,Month,Day,Hour,Minute,Second) [24 Hour Format]
 start_date = DateTime(2003, 7, 26, 0, 0, 0)
@@ -25,10 +25,7 @@ d, grid = make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
 
 # Read in the data and calculate the diffusion parameters
 println("Reading data and calculating parameters...")
-lons_data, lats_data, u_data, v_data, ϵ, a_init = read_data_and_get_parameters(grid, date_range)
-
-# The value of a computed above is an initial estimate. After some experimentation, this value of a was chosen to roughly match the leading spatial/temporal eigenvalues of the inflated generator.
-a = 0.0032
+lons_data, lats_data, u_data, v_data, ϵ, a = read_data_and_get_parameters(grid, date_range)
 
 # Create a generator at each discrete time instance and append each one to Gvec as you go along
 Gvec = []
@@ -53,36 +50,28 @@ println("Making inflated generator...")
 @time 𝐆 = make_inflated_generator(Gvec, time_step, a)
 
 println("Computing inflated eigenvalues...")
-@time Λ, V = eigs(𝐆, which=:LR, nev=20, maxiter=100000)
+@time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
 
 println("Plotting slices...")
-# Plot the spectrum
-@time plot_spectrum(grid, Λ, V)
-
-# Plot slices of a spatial eigenvector of your choice
-println("Plotting eigenvector time slices...")
-vector_index_to_plot = 10
-time_slice_spacing = 4 # Plot every time_slice_spacing-th slice after start_date (time gap of time_slice_spacing*time_step)
-moviefilename = "Movie of 10th inflated generator eigenvector for the East Block.gif"
-
-@time plot_slices(real.(V), vector_index_to_plot, time_slice_spacing, grid, date_range, :RdBu, moviefilename)
-# We have to use real() when producing plots for V or else an error will be thrown when attempting to plot the eigenvectors, even if imag(V[:,vecnum]) = zeros(size(V,1)), as V is a matrix of complex type.
+# Plot the spectrum and obtain the list of real valued spatial eigenvectors for SEBA
+@time real_spat_inds = plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V)
 
 # Calculate SEBA vectors using a collection of eigenvectors; only use real-valued spatial eigenvectors in SEBA
 println("Computing SEBA vectors...")
-seba_inds = [1, 2, 4, 5, 9, 10]
-Σ, ℛ = SEBA(real.(V[:, seba_inds])) # Again, we must take the real part of V or an error will be thrown when running SEBA().
+Σ, ℛ = SEBA(real.(V[:, real_spat_inds])) # We must insert the real part of V into SEBA() or an error will be thrown, even if imag(V[:,k]) = zeros(size(V,1)), as V is a matrix of complex type.
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
-# Plot slices of an individual SEBA vector
+# Plot slices of all SEBA vectors
 println("Plotting SEBA vector time slices...")
-seba_index_to_plot = 4
-moviefilename = "Movie of 4th SEBA vector for the East Block.gif"
-
-@time plot_slices(Σ, seba_index_to_plot, time_slice_spacing, grid, date_range, :Reds, moviefilename)
+time_slice_spacing = 4
+for index_to_plot = 1:length(real_spat_inds)
+    picfilename = "./atmospheric blocking/SEBA vector $index_to_plot for the East Block.png"
+    moviefilename = "./atmospheric blocking/Movie of SEBA vector $index_to_plot for the East Block.gif"
+    @time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
+end
 
 # Save the results to HDF5 and JLD2 files 
-# Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
+# Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
 println("Saving variables...")
-name_save_file = "InfGen_Results_EuroBlock_East"
-@time save_results(grid, date_range, Λ, V, Σ, name_save_file)
+filename = "./atmospheric blocking/InfGen_Results_EuroBlock_East"
+@time save_results(grid, date_range, time_slice_spacing, Λ, V, Σ, filename)
