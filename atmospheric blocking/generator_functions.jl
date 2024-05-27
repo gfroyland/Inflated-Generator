@@ -287,7 +287,7 @@ function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V)
 
 end
 
-# This function plots every `time_slice_spacing`-th time slice of the spacetime vector from the `vecnum` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`.
+# This function plots every `time_slice_spacing`-th time slice of the spacetime vector from the `index_to_plot` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`, and the image of slices will be saved to `picfilename.png`.
 function plot_slices(V, index_to_plot, time_slice_spacing, grid, date_range, col_scheme, picfilename, moviefilename)
 
     # Define the numbers of spatial grid points and time slices
