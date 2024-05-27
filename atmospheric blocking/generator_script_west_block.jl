@@ -54,7 +54,8 @@ println("Computing inflated eigenvalues...")
 
 println("Plotting slices...")
 # Plot the spectrum and obtain the list of real valued spatial eigenvectors for SEBA
-@time real_spat_inds = plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V)
+spectrumpicname = "./atmospheric blocking/Inflated Generator Eigenvalue Spectrum for the West Block.png"
+@time real_spat_inds = plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 
 # Calculate SEBA vectors using a collection of eigenvectors; only use real-valued spatial eigenvectors in SEBA
 println("Computing SEBA vectors...")

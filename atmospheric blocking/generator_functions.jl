@@ -251,8 +251,8 @@ function make_inflated_generator(Gvec, time_step, a)
     return 𝐆
 end
 
-# This function is used to plot the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors V. This function also returns a vector containing the indices of all real-valued spatial eigenvectors for use later when calling SEBA.
-function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V)
+# This function is used to plot the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors V, and saves the plot to `spectrumpicname.png`. This function also returns a vector containing the indices of all real-valued spatial eigenvectors for use later when calling SEBA.
+function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 
     # Number of spatial grid points
     N = length(grid.lonrange) * length(grid.latrange)
@@ -282,6 +282,8 @@ function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V)
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
     display(ylabel!("Im(Λ_k)"))
+
+    savefig(spectrumpicname)
 
     return real_spat_inds
 
