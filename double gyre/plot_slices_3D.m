@@ -4,7 +4,7 @@
 % switching Double Gyre using the inflated generator. 
 % Written by Aleks Badza
 % Created: 03/04/2024
-% Last Modified: 15/05/2024
+% Last Modified: 27/05/2024
 
 set(groot, 'DefaultLineLineWidth', 1, ...
     'DefaultAxesLineWidth', 1, ...
@@ -20,8 +20,9 @@ filename = "InfGen_Results_SwitchingDoubleGyre.h5";
 x_range = h5read(filename,'/x_range');
 y_range = h5read(filename,'/y_range');
 T_range = h5read(filename,'/T_range');
+t_step = h5read(filename,'/time_slice_spacing');
 
-T_select = T_range(1:2:end);
+T_select = T_range(1:t_step:end);
 
 spacelength = length(x_range)*length(y_range);
 N = spacelength*length(T_range);
@@ -33,8 +34,8 @@ SEBA_max = max(SEBA_all,[],2);
 vecnum = 2;
 sebanum = 1;
 
-V_Cutoff = 0.5;
-SEBA_Cutoff = 0.35;
+V_Cutoff = 0.45;
+SEBA_Cutoff = 0.33;
 
 figure
 
@@ -49,12 +50,12 @@ V = zeros(size(T));
 
 for j = 1:length(T_select)
     
-    J = 2*(j-1) + 1;
+    J = t_step*(j-1) + 1;
 
     ind_first = (J-1)*spacelength+1;
     ind_last = J*spacelength;
     
-    v_now = reshape(Eigvecs_all(ind_first:ind_last,vecnum),[length(y_range) length(x_range)])';
+    v_now = transpose(reshape(Eigvecs_all(ind_first:ind_last,vecnum),[length(y_range) length(x_range)]));
     [r,c] = size(v_now);
     
     v_now = v_now(:);
@@ -65,8 +66,8 @@ for j = 1:length(T_select)
     
     V(:,j,:) = sqrt(N)*v_now;
     
-    v_slices = slice(T,X,Y,V,T_select(j),[],[]);
-    v_slices.EdgeColor = 'none';
+    s = slice(T,X,Y,V,T_select(j),[],[]);
+    s.EdgeColor = 'none';
     hold on
     
 end
@@ -85,12 +86,12 @@ S = zeros(size(T));
 
 for j = 1:length(T_select)
     
-    J = 2*(j-1) + 1;
+    J = t_step*(j-1) + 1;
 
     ind_first = (J-1)*spacelength+1;
     ind_last = J*spacelength;
     
-    s_now = reshape(SEBA_max(ind_first:ind_last,sebanum),[length(y_range) length(x_range)])';    
+    s_now = transpose(reshape(SEBA_max(ind_first:ind_last,sebanum),[length(y_range) length(x_range)]));    
     [r,c] = size(s_now);
     
     s_now = s_now(:);
@@ -101,8 +102,8 @@ for j = 1:length(T_select)
     
     S(:,j,:) = s_now;
     
-    s_slices = slice(T,X,Y,S,T_select(j),[],[]);
-    s_slices.EdgeColor = 'none';
+    sf = slice(T,X,Y,S,T_select(j),[],[]);
+    sf.EdgeColor = 'none';
     hold on
     
 end

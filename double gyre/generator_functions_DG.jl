@@ -165,8 +165,8 @@ function make_inflated_generator(Gvec, Δt, a)
     return 𝐆
 end
 
-"`plot_spectrum(grid, Λ, V)` plots the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors."
-function plot_spectrum(grid, Λ, V)
+"`plot_spectrum(grid, Λ, V, spectrumpicname)` plots the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors. This function also returns a vector containing the indices of the first two real-valued spatial eigenvectors (including the first trivial eigenvector) for use later when calling SEBA."
+function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 
     # Number of spatial grid points
     N = length(grid.x_range) * length(grid.y_range)
@@ -186,16 +186,28 @@ function plot_spectrum(grid, Λ, V)
     popfirst!(temp_inds) 
     append!(spat_inds,1)
 
+    # Find the first two real-valued spatial eigenvectors (including trivial V_1) for SEBA. We only require these two eigenvectors for our SEBA calculations in the Double Gyre example.
+    real_spat_inds = intersect(findall(x->x>1e-10,averagespatialvariance),findall(x->abs(x)<1e-12,imag(Λ)))
+
+    # Include 1 in real_spat_inds as well, sort the array so that 1 is listed first, then only retain the first two indices for this example.
+    append!(real_spat_inds,1)
+    real_spat_inds = sort(real_spat_inds)
+    real_spat_inds = real_spat_inds[1:2]
+
     # Plot the spectrum
     scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
     display(ylabel!("Im(Λ_k)"))
 
+    savefig(spectrumpicname)
+
+    return real_spat_inds
+
 end
 
-"`plot_slices(V, vecnum, time_step, grid, T_range, col_scheme, moviefilename)` plots every `time_step`-th time slice of the spacetime vector from the `vecnum` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`."
-function plot_slices(V, vecnum, time_step, grid, T_range, col_scheme, moviefilename)
+"`plot_slices(V, index_to_plot, time_slice_spacing, grid, T_range, col_scheme, moviefilename)` plots every `time_slice_spacing`-th time slice of the spacetime vector from the `index_to_plot` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`, and the image of vector slices will be saved to `picfilename.png`."
+function plot_slices(V, index_to_plot, time_slice_spacing, grid, T_range, col_scheme, picfilename, moviefilename)
 
     # Define the numbers of spatial grid points and time slices
     spacelength = length(grid.x_range) * length(grid.y_range)
@@ -206,31 +218,41 @@ function plot_slices(V, vecnum, time_step, grid, T_range, col_scheme, moviefilen
         V = stack(normalize.(eachcol(V))) * √(size(V, 1))
     end
 
+    # If we're plotting SEBA vectors, all vector entries below 0 should be replaced with 0.
+    if col_scheme == :Reds
+        V[V .< 0] .= 0
+    end
+
     # create a T-vector of time-slices (copies of space)
     sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
 
-    # find a common colour range
-    col_lims = (minimum((V[:, vecnum])),maximum((V[:, vecnum])))
+    # find a common colour range if we're plotting eigenvectors, otherwise fix col_lims to (0, 1) if we're plotting SEBA vectors.
+    if col_scheme == :Reds
+        col_lims = (0, 1)
+    else
+        col_lims = (minimum((V[:, index_to_plot])),maximum((V[:, index_to_plot])))
+    end
 
     # create an animation of frames of the eigenvector
-    anim = @animate for t = 1:time_step:T
+    anim = @animate for t = 1:time_slice_spacing:T
         tm = T_range[t]
-        contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, index_to_plot], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
     display(gif(anim, moviefilename, fps=8))
 
     # plot individual time frames
     fig = []
-    for t = 1:time_step:T
+    for t = 1:time_slice_spacing:T
         tm = T_range[t]
-        push!(fig, contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        push!(fig, contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, index_to_plot], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
     end
     display(plot(fig..., layout=(3, 4)))
+    savefig(picfilename)
 
 end
 
-"`save_results(grid, T_range, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for subsequent use and analysis. Data saved: Grid ranges in x and y (or the entire grid struct in JLD2), the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
-function save_results(grid, T_range, Λ, V, Σ, filename)
+"`save_results(grid, T_range, time_slice_spacing, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for subsequent use and analysis. Data saved: Grid ranges in x and y (or the entire grid struct in JLD2), the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
+function save_results(grid, T_range, time_slice_spacing, Λ, V, Σ, filename)
     
     # Save data to a JLD2 file for use in Julia
     filename_JLD2 = filename * ".jld2"
@@ -245,6 +267,7 @@ function save_results(grid, T_range, Λ, V, Σ, filename)
 
     # The collect() function should be used to save T_range in order to avoid an error being thrown
     file_ID["T_range"] = collect(T_range) 
+    file_ID["time_slice_spacing"] = time_slice_spacing
 
     # Complex valued data cannot be saved to an HDF5 file, so the real and imaginary parts of the eigenvalues and eigenvectors must be split and saved separately
     file_ID["Eigvals_Real"] = real.(Λ)
