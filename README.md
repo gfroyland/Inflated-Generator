@@ -40,7 +40,7 @@ Below is a three-dimensional visualisation of time slices of two almost-invarian
 # Atmospheric Blocking Sample Figure
 Below are several time slices of the SEBA vector highlighting the East block, spaced 24 hours apart.  One sees the block (highlighted in red) begin to appear on 29 July, strengthen from 30 July through to 2 July, and fade on 3 July. This image can be reproduced upon running "generator_script_east_block.jl". All necessary code and data for the inflated generator calculations on the ECMWF atmospheric velocity system can be found in the "atmospheric blocking" directory.
 
-<img src = "https://github.com/gfroyland/Inflated-Generator/blob/aleks/Sample_Block_SEBA_Fig.svg?raw=true" width=600 >
+<img src = "https://github.com/gfroyland/Inflated-Generator/assets/168791783/95bcbd8b-103d-45cf-bbff-024be94c851e" width=600 >
 
 # References
 
