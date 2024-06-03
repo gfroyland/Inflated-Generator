@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, HDF5, JLD2
+using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics
 
 #create a data structure for the grid
 struct Grid
@@ -168,21 +168,16 @@ end
 "`plot_spectrum(grid, Λ, V, spectrumpicname)` plots the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors, and saves the plot to `spectrumpicname.png`. This function also returns a vector containing the indices of the first two real-valued spatial eigenvectors (including the first trivial eigenvector) for use later when calling SEBA."
 function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 
-    # Number of spatial grid points
     N = length(grid.x_range) * length(grid.y_range)
-    # Number of time slices
     T = Int(size(V)[1] / N)
-    # Number of computed eigenvectors 
+
     K = size(V, 2)
 
     # Calculate Means of Eigenvector Variances 
     averagespatialvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
 
-    # Distinguish spatial eigenvalues from temporal ones
-    spat_inds = findall(x->x>1e-10,averagespatialvariance)
-    temp_inds = findall(x->x<1e-10,averagespatialvariance)
+    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
 
-    # Trivial Λ_1 should be plotted as a spatial eigenvalue, but averagespatialvariance[1] ≈ 0, so correct this before plotting
     popfirst!(temp_inds) 
     append!(spat_inds,1)
 

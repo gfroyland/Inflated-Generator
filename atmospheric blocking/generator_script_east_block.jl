@@ -1,8 +1,11 @@
-using HDF5, Dates, Statistics, DelimitedFiles
+using HDF5
+using Dates
+using Statistics
+using DelimitedFiles
 
 include("./generator_functions.jl")
 
-##### all parameters on the spatial and temporal domains are set below
+# x and y arrays remain the same at each time step
 
 # Set longitude and latitude limits and spacing for the grid
 lonmin, lonspacing, lonmax = 15, 1.5, 60
@@ -13,14 +16,16 @@ start_date = DateTime(2003, 7, 26, 0, 0, 0)
 end_date = DateTime(2003, 8, 6, 0, 0, 0)
 time_step = Hour(6) # time step in hours (must be a multiple of 6)
 
-##### finish setting parameters
-
 # Set up an array containing the temporal range for 𝕄
 date_range = start_date:time_step:end_date
 num_time_steps = length(date_range)
 
 # Set up the grid struct and a dictionary for it
 println("Setting up the grid...")
+
+lonmin, lonspacing, lonmax = 15, 1, 60
+latmin, latspacing, latmax = 30, 1, 75
+
 d, grid = make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
 
 # Read in the data and calculate the diffusion parameters
@@ -41,11 +46,13 @@ println("Creating time-slice generators...")
 
     # Create the generator at this time step and attach it to Gvec
     G = make_generator(d, grid, F, ϵ)
+
     push!(Gvec, G)
-  
+
 end
 
 # Assemble the full inflated generator from each individual generator
+
 println("Making inflated generator...")
 @time 𝐆 = make_inflated_generator(Gvec, time_step, a)
 
