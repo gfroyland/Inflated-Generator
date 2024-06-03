@@ -18,10 +18,12 @@ include("../SEBA.jl")
 
 "`make_dict_grid` creates a dictionary to set up our indexing of the grid and fill the grid struct"
 function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
+    # Set up x_range and y_range (the x and y coordinates (respectively) of the centre points of each box in our grid)
     x_range = x_min+Δ_x/2:Δ_x:x_max-Δ_x/2
     y_range = y_min+Δ_y/2:Δ_y:y_max-Δ_y/2
     x_range = round.(x_range, digits=6)
     y_range = round.(y_range, digits=6)
+    # Build an array of tuples with each one representing the Cartesian coordinates of each box centre
     i = 0
     temparray = []
     for x ∈ x_range
@@ -30,10 +32,44 @@ function make_dict_grid(x_min, x_max, Δ_x, y_min, y_max, Δ_y)
             push!(temparray, ([x, y], i))
         end
     end
+    # Create a dictionary for the centres, obtain its keys and set up the struct
     d = Dict(temparray)
     centres = Tuple.(collect(keys(d)))
     grid = Grid(centres, x_range, y_range, x_min, x_max, y_min, y_max, Δ_x, Δ_y)
     return d, grid
+end
+
+"`dg_velocity(t, x)` returns the velocity for the switching Double Gyre system at the point x and time t"
+function dg_velocity(t, x)
+
+    # Define the time-dependent switching double gyre vector field F(t,x) see [Atnip/Froyland/Koltai, 2024]
+    r(t) = (1 / 2) * (1 + tanh(10 * (t - (1 / 2))))
+    α(t) = (1 - 2 * r(t)) / (3 * (r(t) - 2) * (r(t) + 1))
+    β(t) = (2 - 9 * α(t)) / 3
+    return [(-π / 2) * sin(π * (α(t) * x[1]^2 + β(t) * x[1])) * cos(π * x[2] / 2), (2 * α(t) * x[1] + β(t)) * cos(π * (α(t) * x[1]^2 + β(t) * x[1])) * sin(π * x[2] / 2)]
+
+end
+
+"`get_parameters(grid, T_range)` computes values for the inflated generator diffusion parameters ϵ and a"
+function get_parameters(grid, T_range)
+    
+    # Calculate the median of the speeds in the Double Gyre system
+    F_median = median(norm(dg_velocity(t, x)) for t ∈ T_range for x ∈ grid.centres)
+    println("The median of the speeds is... $F_median")
+
+    # Calculate the spatial diffusion parameter ϵ
+    ϵ = √(0.1 * F_median * (grid.Δ_x))
+    println("The calculated ϵ value is... $ϵ")
+
+    # Calculate the temporal diffusion strength a
+    L_max_x = (grid.x_max - grid.x_min)
+    L_max_y = (grid.y_max - grid.y_min)
+    
+    a = (T_range[end]-T_range[1]) * √(1.1 * F_median * (grid.Δ_x)) / (max(L_max_x,L_max_y))
+    println("The initial a value is... $a")
+
+    return ϵ, a
+
 end
 
 "`make_generator(d, grid, F, ϵ)` creates a generator on the grid given by the pair `d`, `grid` for the vector field `F` with spatial diffusion parameter `ϵ`."
@@ -70,7 +106,7 @@ function make_generator(d, grid, F, ϵ)
     lowerface(c, t) = c + (δx / 2 - δy / 2) - δx * t
 
     #construct the generator matrix G
-    tol = 1e-2  #hard coded for now, but may need to be adapted to integral magnitudes
+    tol = 1e-2 
     intorder = 1
     #start looping over c (centres of cells)
     for c ∈ centres
@@ -80,7 +116,6 @@ function make_generator(d, grid, F, ϵ)
             #Because of the integration from 0 to 1 instead of 0 to the length of the face, instead of
             #dividing by volume, I multiply by (Δ_y/volume), which is 1/Δ_x.
             #similarly in the other faces below
-            #G[d[c], d[rightc]] = (quadgk(t -> max(F(rightface(c, t)) ⋅ rightnormal, 0) + ϵ, 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_x
             G[d[c], d[rightc]] = (quadgk(t -> max(F(rightface(c, t)) ⋅ rightnormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_x + (ϵ^2 / (2 * (grid.Δ_x)^2))
         end
         leftc = round.(c - δx, digits=6)
@@ -96,7 +131,6 @@ function make_generator(d, grid, F, ϵ)
             G[d[c], d[lowerc]] = (quadgk(t -> max(F(lowerface(c, t)) ⋅ lowernormal, 0), 0, 1, rtol=tol, atol=tol, order=intorder)[1]) / grid.Δ_y + (ϵ^2 / (2 * (grid.Δ_y)^2))
         end
     end
-    #G = G - spdiagm(vec(sum(G, dims=2)))
 
     #place negative row sums on the diagonal of G so that the row sum of G is now zero.
     G = G - spdiagm(vec(sum(spdiagm(1 ./ volume) * G * spdiagm(volume), dims=2)))
@@ -131,82 +165,106 @@ function make_inflated_generator(Gvec, Δt, a)
     return 𝐆
 end
 
-"`plot_spectrum(grid, Λ, V)` plots the length(Λ) leading eigenvalues of the spectrum of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the meanvariance of eigenvectors test."
-function plot_spectrum(grid, Λ, V)
-
-    # Calculate Means of Eigenvector Variances 
+"`plot_spectrum(grid, Λ, V, spectrumpicname)` plots the length(Λ) leading eigenvalues of the inflated generator, distinguishing spatial eigenvalues from temporal ones using the means of the variances of the inflated generator eigenvectors, and saves the plot to `spectrumpicname.png`. This function also returns a vector containing the indices of the first two real-valued spatial eigenvectors (including the first trivial eigenvector) for use later when calling SEBA."
+function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 
     N = length(grid.x_range) * length(grid.y_range)
     T = Int(size(V)[1] / N)
 
     K = size(V, 2)
 
-    meanvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
-
-    # Plot the Spectrum, distinguishing spatial eigenvalues from temporal ones
-    
-    spat_inds = findall(x->x>1e-10,meanvariance)
-    temp_inds = findall(x->x<1e-10,meanvariance)
+    # Calculate Means of Eigenvector Variances 
+    averagespatialvariance = [mean([var(V[(t-1)*N+1:t*N, k]) for t = 1:T]) for k = 1:K]
 
     # Trivial Λ_1 should be plotted as a spatial eigenvalue, but meanvariance[1] ≈ 0, alleviorate this before plotting
 
     popfirst!(temp_inds) 
     append!(spat_inds,1)
 
+    # Find the first two real-valued spatial eigenvectors (including trivial V_1) for SEBA. We only require these two eigenvectors for our SEBA calculations in the Double Gyre example.
+    real_spat_inds = intersect(findall(x->x>1e-10,averagespatialvariance),findall(x->abs(x)<1e-12,imag(Λ)))
+
+    # Include 1 in real_spat_inds as well, sort the array so that 1 is listed first, then only retain the first two indices for this example.
+    append!(real_spat_inds,1)
+    real_spat_inds = sort(real_spat_inds)
+    real_spat_inds = real_spat_inds[1:2]
+
+    # Plot the spectrum
     scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
     display(ylabel!("Im(Λ_k)"))
 
+    savefig(spectrumpicname)
+
+    return real_spat_inds
+
 end
 
-"`plot_slices(V, vecnum, grid, T_range, col_scheme)` plots the spacetime eigenvector from the `vecnum` column in the matrix of spacetime eigenvectors `V` on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user."
-function plot_slices(V, vecnum, grid, T_range, col_scheme, moviefilename)
+"`plot_slices(V, index_to_plot, time_slice_spacing, grid, T_range, col_scheme, moviefilename)` plots every `time_slice_spacing`-th time slice of the spacetime vector from the `index_to_plot` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`, and the image of vector slices will be saved to `picfilename.png`."
+function plot_slices(V, index_to_plot, time_slice_spacing, grid, T_range, col_scheme, picfilename, moviefilename)
 
+    # Define the numbers of spatial grid points and time slices
     spacelength = length(grid.x_range) * length(grid.y_range)
     T = length(T_range)
 
-    # If we're plotting V, it should be ℓ^2-normalized before being passed in to this function. 
-    # V = stack(normalize.(eachcol(V))) * sqrt(size(V, 1))
+    # If we're plotting V (generator eigenvectors), it should be ℓ^2-normalized. This step is not necessary for SEBA vectors. 
+    if col_scheme == :RdBu
+        V = stack(normalize.(eachcol(V))) * √(size(V, 1))
+    end
 
-    #create a T-vector of time-slices (copies of space)
+    # If we're plotting SEBA vectors, all vector entries below 0 should be replaced with 0.
+    if col_scheme == :Reds
+        V[V .< 0] .= 0
+    end
+
+    # create a T-vector of time-slices (copies of space)
     sliceV = [V[(t-1)*spacelength.+(1:spacelength), :] for t = 1:T]
 
-    # find a common colour range
-    col_lims = (minimum((V[:, vecnum])),maximum((V[:, vecnum])))
+    # find a common colour range if we're plotting eigenvectors, otherwise fix col_lims to (0, 1) if we're plotting SEBA vectors.
+    if col_scheme == :Reds
+        col_lims = (0, 1)
+    else
+        col_lims = (minimum((V[:, index_to_plot])),maximum((V[:, index_to_plot])))
+    end
 
     # create an animation of frames of the eigenvector
-    anim = @animate for t = 1:T
+    anim = @animate for t = 1:time_slice_spacing:T
         tm = T_range[t]
-        contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
+        contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, index_to_plot], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, xlabel="x", ylabel="y", title="t = $tm", linewidth=0, levels=100)
     end
     display(gif(anim, moviefilename, fps=8))
 
     # plot individual time frames
     fig = []
-    for t = 1:T
+    for t = 1:time_slice_spacing:T
         tm = T_range[t]
-        push!(fig, contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, vecnum], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
+        push!(fig, contourf(grid.x_range, grid.y_range, reshape(sliceV[t][:, index_to_plot], length(grid.y_range), length(grid.x_range)), clims=col_lims, c=col_scheme, title="t = $tm", linewidth=0, levels=100, xlim=(0, 3), ylim=(0, 2), aspectratio=1, legend=:none))
     end
-    display(plot(fig[1:2:end]..., layout=(3, 4)))
+    display(plot(fig..., layout=(3, 4)))
+    savefig(picfilename)
 
 end
 
-"`save_results(grid, T_range, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for further use later. Data saved: Grid ranges in x and y, the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
-function save_results(grid, T_range, Λ, V, Σ, filename)
+"`save_results(grid, T_range, time_slice_spacing, Λ, V, Σ, filename)` saves relevant data and results from the inflated generator calculations to HDF5 and JLD2 files for subsequent use and analysis. Data saved: Grid ranges in x and y (or the entire grid struct in JLD2), the temporal range, inflated generator eigenvalues and eigenvectors; and SEBA vectors obtained from the eigenvectors."
+function save_results(grid, T_range, time_slice_spacing, Λ, V, Σ, filename)
     
-    # Save data to JLD2 file
+    # Save data to a JLD2 file for use in Julia
     filename_JLD2 = filename * ".jld2"
     jldsave(filename_JLD2; grid, T_range, Λ, V, Σ)
 
-    # Save data to HDF5 file
+    # Save data to an HDF5 file for use in MATLAB and other programming languages which may not be able to process JLD2 files
     filename_HDF5 = filename * ".h5"
     file_ID = h5open(filename_HDF5, "w")
 
     file_ID["x_range"] = grid.x_range
     file_ID["y_range"] = grid.y_range
-    file_ID["T_range"] = collect(T_range) # The collect() function must be used or an error will be thrown
 
+    # The collect() function should be used to save T_range in order to avoid an error being thrown
+    file_ID["T_range"] = collect(T_range) 
+    file_ID["time_slice_spacing"] = time_slice_spacing
+
+    # Complex valued data cannot be saved to an HDF5 file, so the real and imaginary parts of the eigenvalues and eigenvectors must be split and saved separately
     file_ID["Eigvals_Real"] = real.(Λ)
     file_ID["Eigvals_Imag"] = imag.(Λ)
 
