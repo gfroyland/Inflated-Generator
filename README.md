@@ -1,5 +1,10 @@
 # Inflated-Generator
-This repository features Julia and MATLAB code used for the numerical implementation of the inflated generator, a time-extended version of the transfer operator, to two dynamic velocity systems in an effort to detect quasi-stationary families of almost-invariant sets within each of these systems. The two systems in question are:
+This repository features Julia and MATLAB code used for the numerical implementation of the inflated generator, a time-extended version of the generator of the transfer operator, as described in the paper:
+
+Aleksandar Badza and Gary Froyland. Identifying the onset and decay of quasi-stationary families of almost-invariant sets
+with an application to atmospheric blocking events, 2024.
+
+The code provided here is for two systems:
 
 1. The Switching Double Gyre, an idealised flow system involving two counter-rotating gyres of unequal size within a rectangular flow domain as defined in [1]; and
 2. ECMWF wind velocity data [2] used to identify two atmospheric blocking events occurring during the European Summer of 2003. The two events in question are a "West block", centred around France (further West in Europe) and taking place between 2-12 August 2003; and an "East block", centred around Western Russia (further East in Europe) and taking place between 29 July-3 August 2003.
