@@ -144,7 +144,7 @@ function make_generator(d, grid, F, ϵ)
 
 end
 
-"`make_inflated_generator(Gvec, Δt, a)` constructs theinflated generator from the time-indexed vector of generator matrices `Gvec` with discrete temporal spacing `Δt` and temporal diffusion parameter `a`"
+"`make_inflated_generator(Gvec, Δt, a)` constructs the inflated generator from the time-indexed vector of generator matrices `Gvec` with discrete temporal spacing `Δt` and temporal diffusion parameter `a`"
 function make_inflated_generator(Gvec, Δt, a)
 
     #create Gspat
