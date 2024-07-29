@@ -1,4 +1,4 @@
-using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics
+using Plots, LinearAlgebra, QuadGK, SparseArrays, Arpack, Statistics, HDF5, JLD2
 
 #create a data structure for the grid
 struct Grid
