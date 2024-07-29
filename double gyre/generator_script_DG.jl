@@ -8,8 +8,8 @@ T_range = 0:Δt:1
 
 # Create a grid and indexing for the spatial domain [xmin,xmax]x[ymin,ymax]
 println("Setting up the grid...")
-xmin, Δx, xmax = 0, 0.05, 3 
-ymin, Δy, ymax = 0, 0.05, 2
+xmin, Δx, xmax = 0, 0.1, 3 
+ymin, Δy, ymax = 0, 0.1, 2
 d, grid = make_dict_grid(xmin, xmax, Δx, ymin, ymax, Δy)
 
 ##### Parameter Selection Complete
