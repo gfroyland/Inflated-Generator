@@ -33,7 +33,7 @@ a = 0.115
 end
 
 println("Computing inflated generator eigenvalues...")
-@time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
+@time Λ, V = eigs(𝐆, which=:LR, nev=11, maxiter=100000) # The 10th eigenvalue is complex, let nev=11 to obtain its conjugate
 
 # Plot of the spectrum
 spectrumpicname = "./double gyre/Inflated Generator Eigenvalue Spectrum for the Double Gyre.png"
