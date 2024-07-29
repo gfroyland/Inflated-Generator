@@ -1,20 +1,19 @@
-using HDF5
-using Dates
-using Statistics
-using DelimitedFiles
+using HDF5, Dates, Statistics, DelimitedFiles
 
 include("./generator_functions.jl")
 
-# x and y arrays remain the same at each time step
+##### all parameters on the spatial and temporal domains are set below
 
 # Set longitude and latitude limits and spacing for the grid
-lonmin, lonspacing, lonmax = 15, 1.5, 60
-latmin, latspacing, latmax = 30, 1.5, 75
+lonmin, lonspacing, lonmax = 15, 1, 60
+latmin, latspacing, latmax = 30, 1, 75
 
 # Choose the time bounds of interest: DateTime(Year,Month,Day,Hour,Minute,Second) [24 Hour Format]
 start_date = DateTime(2003, 7, 26, 0, 0, 0)
 end_date = DateTime(2003, 8, 6, 0, 0, 0)
 time_step = Hour(6) # time step in hours (must be a multiple of 6)
+
+##### finish setting parameters
 
 # Set up an array containing the temporal range for 𝕄
 date_range = start_date:time_step:end_date
@@ -22,15 +21,14 @@ num_time_steps = length(date_range)
 
 # Set up the grid struct and a dictionary for it
 println("Setting up the grid...")
-
-lonmin, lonspacing, lonmax = 15, 1, 60
-latmin, latspacing, latmax = 30, 1, 75
-
 d, grid = make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
 
 # Read in the data and calculate the diffusion parameters
 println("Reading data and calculating parameters...")
 lons_data, lats_data, u_data, v_data, ϵ, a = read_data_and_get_parameters(grid, date_range)
+
+# Set a to this value to better match the leading temporal and spatial eigenvalues of the inflated generator
+a = 0.0032
 
 # Create a generator at each discrete time instance and append each one to Gvec as you go along
 Gvec = []
@@ -69,14 +67,13 @@ println("Computing SEBA vectors...")
 Σ, ℛ = SEBA(real.(V[:, real_spat_inds])) # We must insert the real part of V into SEBA() or an error will be thrown, even if imag(V[:,k]) = zeros(size(V,1)), as V is a matrix of complex type.
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
-# Plot slices of all SEBA vectors
+# Plot slices of the SEBA vector showing the East Block
 println("Plotting SEBA vector time slices...")
+index_to_plot = 3 # The third SEBA vector illustrates this block
 time_slice_spacing = 4
-for index_to_plot = 1:length(real_spat_inds)
-    picfilename = "./atmospheric blocking/SEBA vector $index_to_plot for the East Block.png"
-    moviefilename = "./atmospheric blocking/Movie of SEBA vector $index_to_plot for the East Block.gif"
-    @time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
-end
+picfilename = "./atmospheric blocking/The East Block illustrated through SEBA vector $index_to_plot.png"
+moviefilename = "./atmospheric blocking/Movie of the East Block illustrated through SEBA vector $index_to_plot.mp4"
+@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors

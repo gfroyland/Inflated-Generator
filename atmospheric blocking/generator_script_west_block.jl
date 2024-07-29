@@ -5,8 +5,8 @@ include("./generator_functions.jl")
 ##### all parameters on the spatial and temporal domains are set below
 
 # Set longitude and latitude limits and spacing for the grid
-lonmin, lonspacing, lonmax = -10, 2, 40
-latmin, latspacing, latmax = 30, 1.5, 75
+lonmin, lonspacing, lonmax = -10, 1, 40
+latmin, latspacing, latmax = 30, 1, 75
 
 # Choose the time bounds of interest: DateTime(Year,Month,Day,Hour,Minute,Second) [24 Hour Format]
 start_date = DateTime(2003, 7, 28, 0, 0, 0)
@@ -27,6 +27,9 @@ d, grid = make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)
 println("Reading data and calculating parameters...")
 lons_data, lats_data, u_data, v_data, ϵ, a = read_data_and_get_parameters(grid, date_range)
 
+# Set a to this value to better match the leading temporal and spatial eigenvalues of the inflated generator
+a = 0.0045
+
 # Create a generator at each discrete time instance and append each one to Gvec as you go along
 Gvec = []
 
@@ -41,11 +44,13 @@ println("Creating time-slice generators...")
 
     # Create the generator at this time step and attach it to Gvec
     G = make_generator(d, grid, F, ϵ)
+
     push!(Gvec, G)
 
 end
 
 # Assemble the full inflated generator from each individual generator
+
 println("Making inflated generator...")
 @time 𝐆 = make_inflated_generator(Gvec, time_step, a)
 
@@ -62,14 +67,13 @@ println("Computing SEBA vectors...")
 Σ, ℛ = SEBA(real.(V[:, real_spat_inds])) # We must insert the real part of V into SEBA() or an error will be thrown, even if imag(V[:,k]) = zeros(size(V,1)), as V is a matrix of complex type.
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
-# Plot slices of all SEBA vectors
+# Plot slices of the SEBA vector showing the West Block
 println("Plotting SEBA vector time slices...")
+index_to_plot = 1 # The first SEBA vector illustrates this block
 time_slice_spacing = 8
-for index_to_plot = 1:length(real_spat_inds)
-    picfilename = "./atmospheric blocking/SEBA vector $index_to_plot for the West Block.png"
-    moviefilename = "./atmospheric blocking/Movie of SEBA vector $index_to_plot for the West Block.gif"
-    @time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
-end
+picfilename = "./atmospheric blocking/The West Block illustrated through SEBA vector $index_to_plot.png"
+moviefilename = "./atmospheric blocking/Movie of the West Block illustrated through SEBA vector $index_to_plot.mp4"
+@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
