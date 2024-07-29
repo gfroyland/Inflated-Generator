@@ -61,6 +61,7 @@ println("Plotting slices...")
 # Plot the spectrum and obtain the list of real valued spatial eigenvectors for SEBA
 spectrumpicname = "./atmospheric blocking/Inflated Generator Eigenvalue Spectrum for the East Block.png"
 @time real_spat_inds = plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
+pop!(real_spat_inds) # Remove the last entry (10) from real_spat_inds, as the 10th eigenvector of V is not required below
 
 # Calculate SEBA vectors using a collection of eigenvectors; only use real-valued spatial eigenvectors in SEBA
 println("Computing SEBA vectors...")
@@ -71,9 +72,10 @@ println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 println("Plotting SEBA vector time slices...")
 index_to_plot = 3 # The third SEBA vector illustrates this block
 time_slice_spacing = 4
+titleforplots = "SEBA Vector $index_to_plot (The East Block)"
 picfilename = "./atmospheric blocking/The East Block illustrated through SEBA vector $index_to_plot.png"
 moviefilename = "./atmospheric blocking/Movie of the East Block illustrated through SEBA vector $index_to_plot.mp4"
-@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
+@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, titleforplots, picfilename, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors

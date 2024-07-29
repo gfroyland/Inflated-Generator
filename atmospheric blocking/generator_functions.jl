@@ -278,7 +278,7 @@ function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
     real_spat_inds = sort(real_spat_inds)
 
     # Plot the spectrum and return real_spat_inds for use in SEBA later
-    scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)")
+    scatter(Λ[spat_inds], label="Spatial Λ_k", shape=:circle, mc=:blue, title="$(length(Λ)) eigenvalues with largest real part, a = $a", xlabel="Re(Λ_k)", ylabel="Im(Λ_k)", size=(700,500))
     scatter!(Λ[temp_inds], label="Temporal Λ_k", shape=:xcross, mc=:red, msw=4)
     xlabel!("Re(Λ_k)")
     display(ylabel!("Im(Λ_k)"))
@@ -290,7 +290,7 @@ function plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
 end
 
 # This function plots every `time_slice_spacing`-th time slice of the spacetime vector from the `index_to_plot` column in the matrix of spacetime vectors `V` (can be eigenvectors or SEBA vectors) on the grid `grid` over the time steps in T_range. A colour scheme (col_scheme) should be chosen by the user. The animation of the vector slices over time will be saved to a file named `moviefilename.gif`, and the image of slices will be saved to `picfilename.png`.
-function plot_slices(V, index_to_plot, time_slice_spacing, grid, date_range, col_scheme, picfilename, moviefilename)
+function plot_slices(V, index_to_plot, time_slice_spacing, grid, date_range, col_scheme, titleforplots, picfilename, moviefilename)
 
     # Define the numbers of spatial grid points and time slices
     spacelength = length(grid.lonrange) * length(grid.latrange)
@@ -313,7 +313,7 @@ function plot_slices(V, index_to_plot, time_slice_spacing, grid, date_range, col
 
     # create an animation of frames of the eigenvector
     anim = @animate for t = 1:time_slice_spacing:T
-        title_now = Dates.format(date_range[t], "dd/mm HH:MM")
+        title_now = titleforplots * ", " * Dates.format(date_range[t], "dd/mm/yy HH:MM")
         contourf(grid.lonrange, grid.latrange, reshape(sliceV[t][:, index_to_plot], length(grid.latrange), length(grid.lonrange)), clims=col_lims, c=col_scheme, xlabel="̊ E", ylabel="̊ N", title=title_now, linewidth=0, levels=100)
     end
     display(gif(anim, moviefilename, fps=8))
@@ -324,7 +324,7 @@ function plot_slices(V, index_to_plot, time_slice_spacing, grid, date_range, col
         title_now = Dates.format(date_range[t], "dd/mm HH:MM")
         push!(fig, contourf(grid.lonrange, grid.latrange, reshape(sliceV[t][:, index_to_plot], length(grid.latrange), length(grid.lonrange)), clims=col_lims, c=col_scheme, title=title_now, linewidth=0, levels=100, aspectratio=1, legend=:none))
     end
-    display(plot(fig..., layout=(3, 4)))
+    display(plot(fig..., layout=(3, 4),size=(800,600),plot_title=titleforplots))
     savefig(picfilename)
     
 end

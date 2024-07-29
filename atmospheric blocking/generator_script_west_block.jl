@@ -55,12 +55,13 @@ println("Making inflated generator...")
 @time 𝐆 = make_inflated_generator(Gvec, time_step, a)
 
 println("Computing inflated eigenvalues...")
-@time Λ, V = eigs(𝐆, which=:LR, nev=10, maxiter=100000)
+@time Λ, V = eigs(𝐆, which=:LR, nev=11, maxiter=100000) # The 10th eigenvalue is complex, let nev=11 to obtain its conjugate
 
 println("Plotting slices...")
 # Plot the spectrum and obtain the list of real valued spatial eigenvectors for SEBA
 spectrumpicname = "./atmospheric blocking/Inflated Generator Eigenvalue Spectrum for the West Block.png"
 @time real_spat_inds = plot_spectrum_and_get_real_spatial_eigs(grid, Λ, V, spectrumpicname)
+pop!(real_spat_inds) # Remove the last entry (9) from real_spat_inds, as the 9th eigenvector of V is not required below
 
 # Calculate SEBA vectors using a collection of eigenvectors; only use real-valued spatial eigenvectors in SEBA
 println("Computing SEBA vectors...")
@@ -71,9 +72,10 @@ println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 println("Plotting SEBA vector time slices...")
 index_to_plot = 1 # The first SEBA vector illustrates this block
 time_slice_spacing = 8
+titleforplots = "SEBA Vector $index_to_plot (The West Block)"
 picfilename = "./atmospheric blocking/The West Block illustrated through SEBA vector $index_to_plot.png"
 moviefilename = "./atmospheric blocking/Movie of the West Block illustrated through SEBA vector $index_to_plot.mp4"
-@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, picfilename, moviefilename)
+@time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, titleforplots, picfilename, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
