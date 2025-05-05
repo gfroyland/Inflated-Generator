@@ -1,8 +1,8 @@
 # Inflated-Generator
 This repository features Julia and MATLAB code used for the numerical implementation of the inflated generator, a time-extended version of the generator of the transfer operator, as described in the paper:
 
-Aleksandar Badza and Gary Froyland. Identifying the onset and decay of quasi-stationary families of almost-invariant sets
-with an application to atmospheric blocking events, 2024.
+Aleksandar Badza and Gary Froyland. "Identifying the onset and decay of quasi-stationary families of almost-invariant sets
+with an application to atmospheric blocking events", <i>Chaos</i> 34(12):123153, 2024.  https://arxiv.org/abs/2407.07278
 
 The code provided here is for two systems:
 
