@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 function SEBA(V, Rinit=nothing)
 
     # Inputs: 
@@ -18,7 +16,6 @@ function SEBA(V, Rinit=nothing)
     p, r = size(V)
     μ = 0.99 / sqrt(p)
 
-    S = zeros(size(V))
     # Perturb near-constant vectors
     for j = 1:r
         if maximum(V[:, j]) - minimum(V[:, j]) < 1e-14
@@ -28,19 +25,22 @@ function SEBA(V, Rinit=nothing)
 
     # Initialise rotation
     if Rinit ≡ nothing
-        Rnew = I
+        Rnew = CuArray(Matrix(I, r, r))
     else
         # Ensure orthonormality of Rinit
-        F = svd(Rinit)
+        F = svd(CuArray(Rinit))
         Rnew = F.U * F.Vt
     end
 
     # Define soft-threshold function:  soft threshold scalar z by threshold μ
     soft_threshold(z, μ) = sign(z) * max(abs(z) - μ, 0)
 
-    # Preallocate matrices
-    R = zeros(r, r)
-    S = zeros(p, r)
+    # Switch V to a CuArray
+    V = CuArray(V)
+
+    # Preallocate matrices R and S as CuArrays
+    R = CuArray(zeros(r, r))
+    S = CuArray(zeros(p, r))
 
     iter = 0
     while norm(Rnew - R) > 1e-12 && iter < maxiter
@@ -51,14 +51,19 @@ function SEBA(V, Rinit=nothing)
         # Normalize columns of S
         foreach(normalize!, eachcol(S))
         # Polar decomposition to solve Procrustes problem
-        F = svd(S' * V)
+        F = svd(S' * V, full=false)
         Rnew = F.U * F.Vt
     end
 
+    # Move R, Rnew and S back to the CPU
+    R = Array(R)
+    Rnew = Array(Rnew)
+    S = Array(S)
+
     # Choose correct parity of vectors and scale so largest value is 1
     for i = 1:r
-        S[:, i] = S[:, i] * sign(sum(S[:, i]))
-        S[:, i] = S[:, i] / maximum(S[:, i])
+        S[:, i] .= S[:, i] * sign(sum(S[:, i]))
+        S[:, i] .= S[:, i] / maximum(S[:, i])
     end
 
     # Sort so that most reliable vectors appear first
@@ -66,7 +71,6 @@ function SEBA(V, Rinit=nothing)
     S = S[:, ind]
 
     error = norm(Rnew - R)
-    return S
+    return S, R, iter, error
 
 end
-
