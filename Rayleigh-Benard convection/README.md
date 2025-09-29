@@ -1,3 +1,81 @@
-# Test Readme file for RBC
+# Inflated-Generator-Rayleigh-Benard-Convection
+This repository contains Julia code designed for the numerical implementation of the inflated generator method to identify quasi-stationary families of almost-invariant sets present within a three-dimensional Rayleigh-Benard Convection (RBC) flow system. 
 
-Info goes here.
+Included within the source ("src") folder are two subfolders (named "cpu_code" and "gpu_code") which each contain the following three code files:
+
+1. "generator_functions.jl", which contains Julia functions used to (among other things) construct the inflated generator, calculate its eigenbasis using the Arnoldi method, classify the eigenvalues/eigenvectors produced (as spatial, temporal or complex), generate sample Figures for the results and save relevant output data once the code has finished running.
+2. "generator_script.jl", used to execute the full inflated generator method on the 3D RBC flow system by way of constructing the inflated generator, calculating the leading 300 eigenvalues and eigenvectors of this inflated generator (i.e. the 300 eigenvalues with largest real part and their corresponding eigenvectors); and generating a SEBA basis for the collection of real-valued spatial eigenvectors computed for the inflated generator.
+3. "SEBA.jl", which contains code used to run the SEBA algorithm. This algorithm is used to generate a sparse eigenbasis approximation from the real-valued spatial eigenvectors calculated for the RBC inflated generator, in an effort to gain a clearer visualisation of the quasi-stationary families of almost-invariant sets present within the 3D RBC flow system.
+
+The difference between the code files in each folder is that in the version of the code contained within the "gpu_code" directory, computationally expensive mathematical processes, in particular the multiplication of large matrices as part of the Arnoldi method or the SEBA algorithm, are performed using arrays defined on GPU cores rather than a standard CPU processor in order to improve the efficiency of the inflated generator method. If you do not have access to a PC or a HPC cluster containing GPU cores, you can still execute the inflated generator method using the code contained within the "cpu_code" directory.
+
+Also included within this repository are .toml files which detail the packages and version/subdependency information for these packages which are necessary for the replication of the Julia environment generated for the successful execution of this code, and two sample Figures that are reproducible by running the "generator_script.jl" file contained within either one of the subfolders in the src directory (these are featured below and will be further elaborated on later in this README file).
+
+When running the code featured in this repository, please ensure that you run it with a (as of April 2025) new version of Julia such as v1.10.8 or v1.11.2. Do not run this code with Julia versions v1.10.7 or v1.11.1, or the code featured within this repository will fail due to circular dependency issues present with the CUDA.jl package on these versions of Julia. For more information on these circular dependency issues, we refer you to this link: https://discourse.julialang.org/t/circular-dependency-warning/123388.
+
+# Downloading the RBC Velocity Data
+
+Unfortunately, owing to their large file sizes, the RBC velocity data required to run this code cannot be downloaded from this repository. *Details on where to download the data from to come*
+
+# Downloading the Repository and Running the Code
+
+Here are the instructions to follow for the successful execution of this code on your system: 
+
+**Using a Stand Alone Julia REPL Window**
+
+1. Download and save the "Inflated-Generator-Rayleigh-Benard-Convection" repository to your system.
+2. Download the "RBC Velocity Data" folder from *TBA* and save it to the "Inflated-Generator-Rayleigh-Benard-Convection" folder on your system.
+3. Open a new Julia REPL window and move to the "Inflated-Generator-Rayleigh-Benard-Convection" directory.
+4. Set up the Julia environment for this repository by hitting the "]" key on your keyboard, followed by typing the commands "activate ." and "instantiate", and hitting the backspace key once these processes have been completed.
+5. Either:
+    1. Run the GPU version of the RBC inflated generator script with: include("src/gpu_code/generator_script.jl"), if your PC has GPU capabilities or you are running this code on a HPC cluster; or
+    2. Run the CPU version of the RBC inflated generator script with: include("src/cpu_code/generator_script.jl"), if you do not have these GPU capabilities at hand.
+6. Data, images, movies and text files will be stored in either the "src/cpu_code" subdirectory or the "src/gpu_code" subdirectory; depending on which version of the generator script you have run.
+
+**Using VS Code**
+
+1. Download and save the "Inflated-Generator-Rayleigh-Benard-Convection" repository to your system.
+2. Download the "RBC Velocity Data" folder from *TBA* and save it to the "Inflated-Generator-Rayleigh-Benard-Convection" folder on your system.
+3. Open VS Code, and open the "Inflated-Generator-Rayleigh-Benard-Convection" folder in your workspace.
+4. Start a new Julia REPL in VS Code. Click on "Julia env" at the bottom of your VS Code window, select "(pick a folder)" from the drop down menu appearing at the top of the window, and find and select the "Inflated-Generator-Rayleigh-Benard-Convection" folder in the system dialog.
+5. Complete the set up of the Julia environment for this repository by hitting the "]" key on your keyboard, followed by typing the commands "activate ." and "instantiate", and hitting the backspace key once these processes have been completed.
+6. In the VS Code explorer sidebar, navigate to the "src" folder, then navigate to either the "cpu_code" or the "gpu_code" folder depending on your system's capabilities; and then left-click on the "generator_script.jl" file within that folder. The code should open at the right. Click on the right-pointing triangle icon near the top right to run the script file.
+7. Data, images, movies and text files will be stored in either the "src/cpu_code" subdirectory or the "src/gpu_code" subdirectory; depending on which version of the generator script you have run.
+
+# Details on Code Output
+
+Once an inflated generator script file has been executed, a text file along with a collection of images, movies and data files will be saved to either the "src/cpu_code" or "src/gpu_code" directories; depending on which version of the script has been run. A brief rundown of each of the files saved is as follows:
+
+1. "InfGen Parameters.txt", a text file detailing key output parameters pertinent to the inflated generator method including, but not limited to: the spatial domain and time interval for the inflated generator calculations; the side length of each box that the spatial domain is subdivided into, the length of each time step along with the total number of time steps taken; values calculated for the spatial and temporal diffusion parameters ϵ and a; computation times for the construction of the spatial generators, calculation of the inflated generator eigenvalues/eigenvectors and generation of the SEBA vectors; indices of the spatial and temporal inflated generator eigenvectors; and the minima of the SEBA vectors (listed in order from closest to zero to furthest from zero; which is how the SEBA vectors are ranked and assigned their indices).
+2. "RBC_InfGen_Spatial_Generator_Data.jld2", a JLD2 file containing the spatial generators computed for the RBC flow at each time step, along with the grid data for the spatial domain and the time range and time step taken for the inflated generator calculations.
+3. "RBC_InfGen_Eigenbasis_Results.h5", an HDF5 file containing the inflated generator eigenvalues, vectors with indices used to identify the type of each eigenvalue (spatial, temporal or complex) and data pertaining to the real-valued spatial eigenvectors of the inflated generator (these are the only eigenvectors saved, in an effort to reduce the size of this data file and also because these eigenvectors are the only ones that are practical for use in finding quasi-stationary families of almost-invariant sets). Also included is the grid data for the spatial domain and the time range taken for the inflated generator calculations.
+4. "RBC_InfGen_SEBA_Data.h5", an HDF5 file containing the SEBA vectors calculated from the real-valued spatial inflated generator eigenvectors, and interpolated versions of these vectors on a finer grid corresponding to half the box side length used in the original inflated generator calculations. Also saved is the spatial grid data for the original grid, the spatial grid data for the finer grid over which the SEBA data is interpolated, and the time range data.
+5. "RBC Inflated Generator Spectrum.png", a plot of the eigenvalue spectrum for the inflated generator, showing the leading 300 eigenvalues distinguished by their type (spatial, temporal or complex).
+6. "RBC Leading Spatial Eigenvector xy Midplane.mp4", a movie showing the temporal evolution of the leading real-valued spatial eigenvector of the inflated generator for the RBC flow system taken along the xy-plane with z = 0.5 (in other words, the xy "midplane").
+7. "RBC Leading Spatial Eigenvector xy Midplane.png", a gridded Figure showing time slices of the leading real-valued spatial eigenvector of the inflated generator for the RBC flow system in the xy-plane with z = 0.5 spaced 3 T_f (units of time) apart. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl" (in the "src/cpu_code" folder or the "src/gpu_code" folder).
+8. "RBC SEBA Maxima xy Midplane.mp4", a movie showing the temporal evolution of the maxima of all SEBA vectors computed for the RBC flow system taken along the xy-plane with z = 0.5 (in other words, the xy "midplane").
+9. "RBC SEBA Maxima xy Midplane.png", a gridded Figure showing time slices of the maxima of all SEBA vectors computed for the RBC flow system in the xy-plane with z = 0.5 spaced 3 T_f (units of time) apart. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl" (in the "src/cpu_code" folder or the "src/gpu_code" folder).
+
+# Sample Figures
+
+The Figure below shows time slices of the leading real-valued spatial eigenvector for the inflated generator of the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart, produced for the sake of validation of the code and the results. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl".
+
+![Leading_evec](/Sample%20Figures/RBC%20Leading%20Spatial%20Eigenvector%20xy%20Midplane.png)
+
+The Figure below shows time slices of the maxima of 24 SEBA vectors generated for the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart. Quasi-stationary families of almost-invariant sets are identifiable through sub-regions of the domain coloured in deep red which roughly maintain their shape and do not fade in colour for at least 30-40 units of time. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl".
+
+![SEBA_Max](/Sample%20Figures/RBC%20SEBA%20Maxima%20xy%20Midplane.png)
+
+# Changing Parameters Within The Scripts
+
+After running either version of "generator_script.jl" in their current forms, you can rerun this script (and hence the inflated generator method for the RBC flow system) after making some changes to some of the method's most crucial computational parameters. To make these changes, open the preferred version of "generator_script.jl" (depending on your system's capabilities) in VS Code or using a Nano Text Editor (preferably the former so that you can more easily navigate through the script file), and make the following alterations to the script to satisfy your needs:
+
+1. On Line 17 of "generator_script.jl", change "v_orientation" to 1 to run the inflated generator method for +v, or positive RBC velocity data (this is currently set to -1, to run the method on -v or negative RBC velocity data).
+2. On Line 30 of "generator_script.jl", change "ℓ" to set the desired side length for the cubes we subdivide the 3D spatial domain for the RBC flow system into (and hence, set the resolution level of the results). Ideally, ℓ should take a value of 1/(2^(n)), where n is a positive integer greater than or equal to 1, and the smaller the value of ℓ is, the better the resolution of the results will be. However, it must be stressed that when using the CPU version of the script the runtime of the inflated generator method will start to increase significantly as the value of ℓ decreases. The difference in runtimes between the two versions of the script will not differ too significantly for the currently set value of ℓ (which is 1/4), but as ℓ gets smaller the size of the inflated generator matrix will get larger, and the large matrix multiplications that will not be performed on GPU cores when we reach the Arnoldi method and SEBA algorithm will cause the runtime for the CPU version of the script to increase at a much faster rate than the runtime for the GPU version of the script.
+3. On Line 44 of "generator_script.jl", choose a new value for the temporal diffusion parameter a. Choose any positive value of a that you wish, though ideally it should be larger (but not too much larger) than the heuristic for a previously computed when the script was first run. Consult the "InfGen Parameters.txt" text file in the "src/cpu_code" or "src/gpu_code" folder to uncover what that heuristic of a was computed to be.
+4. On Line 90 of "generator_script.jl", change "num_of_Λ" to set the number of eigenvalues/eigenvectors of the inflated generator you wish to compute using the Arnoldi method (this is currently set to 300, which should be sufficient, but increase this if desired, bearing in mind that the runtime of the code will increase for larger values of this parameter regardless of which version of the script is used).
+5. On Line 91 of "generator_script.jl", change "tol" to set a different eigenvalue/eigenvector residual tolerance for the Arnoldi method if you wish. tol is currently set to √eps() or roughly 1.49e-08, which is the default tolerance for the Arnoldi method.
+
+# Acknowledgements
+
+The authors of this repository wish to acknowledge Prof. Joerg Schumacher and Roshan John Samuel of Technische Universitat Ilmenau for their curation of the Rayleigh-Benard Convection velocity data, their analysis of the results and their helpful assistance and suggestions pertinent to this research.
