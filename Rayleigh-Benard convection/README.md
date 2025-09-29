@@ -1,4 +1,5 @@
-# Inflated-Generator-Rayleigh-Benard-Convection
+# Readme File for Rayleigh-Benard Convection
+
 This folder contains Julia code designed for the numerical implementation of the inflated generator method to identify quasi-stationary families of almost-invariant sets present within a three-dimensional Rayleigh-Benard Convection (RBC) flow system. 
 
 There are two versions of the Julia code required to run this method on the RBC system, contained within the two subfolders (named "InfGen_RBC_CPU" and "InfGen_RBC_GPU") which each contain the following files:
@@ -73,6 +74,3 @@ After running either version of "generator_script.jl" in their current forms, yo
 4. On Line 90 of "generator_script.jl", change "num_of_Λ" to set the number of eigenvalues/eigenvectors of the inflated generator you wish to compute using the Arnoldi method (this is currently set to 300, which should be sufficient, but increase this if desired, bearing in mind that the runtime of the code will increase for larger values of this parameter regardless of which version of the script is used).
 5. On Line 91 of "generator_script.jl", change "tol" to set a different eigenvalue/eigenvector residual tolerance for the Arnoldi method if you wish. tol is currently set to √eps() or roughly 1.49e-08, which is the default tolerance for the Arnoldi method.
 
-# Acknowledgements
-
-The authors of this repository wish to acknowledge Prof. Joerg Schumacher and Roshan John Samuel of Technische Universitat Ilmenau for their curation of the Rayleigh-Benard Convection velocity data, their analysis of the results and their helpful assistance and suggestions pertinent to this research.
