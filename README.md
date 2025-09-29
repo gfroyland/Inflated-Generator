@@ -1,8 +1,10 @@
 # Inflated-Generator
-This repository contains Julia code used for the numerical implementation of the inflated generator, a time-expanded version of the generator of the transfer operator, as described in the paper:
+This repository contains Julia code used for the numerical implementation of the inflated generator, a time-expanded version of the generator of the transfer operator, as described in the papers:
 
 Aleksandar Badza and Gary Froyland. "Identifying the onset and decay of quasi-stationary families of almost-invariant sets
 with an application to atmospheric blocking events", <i>Chaos</i> 34(12):123153, 2024.  https://arxiv.org/abs/2407.07278
+
+Aleksandar Badza, Gary Froyland, Roshan J. Samuel and Joerg Schumacher. "Transient almost-invariant sets reveal convective heat transfer patterns in plane-layer Rayleigh-B\'{e}nard convection", Publication details TBA.
 
 The code provided here is for three systems:
 
