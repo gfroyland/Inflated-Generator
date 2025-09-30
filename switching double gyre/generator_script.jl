@@ -1,4 +1,4 @@
-include("./generator_functions_DG.jl")
+include("./generator_functions.jl")
 
 ##### Set Spatial/Temporal Parameters Below
 
