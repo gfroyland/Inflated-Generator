@@ -51,13 +51,3 @@ Once the inflated generator script file has been executed, a collection of image
 Below is a three-dimensional visualisation of time slices of two almost-invariant sets detected for the switching Double Gyre system using the inflated generator method. The left axis of the figure displays the leading spatial eigenvector of the inflated generator, while the right axis of the figure displays two SEBA vectors generated from the first two eigenvectors of the inflated generator. This image can be reproduced using the MATLAB script "plot_slices_3D.m" and output data obtained from running "generator_script.jl".
 
 <img src = "https://github.com/gfroyland/Inflated-Generator/assets/168791783/9c79fbd8-ee85-4250-be97-03af57e6221e" width=600 >
-
-# Changing Parameters Within The Scripts
-
-After running "generator_script.jl" in its current form, you can rerun this script (and hence the inflated generator method for the switching Double Gyre system) after making some changes to some of the method's most crucial computational parameters. To make these changes, open "generator_script.jl" in VS Code or using a Nano Text Editor (preferably the former so that you can more easily navigate through the script file), and make the following alterations to the script to satisfy your needs:
-
-1. On Line 6 of "generator_script.jl", change "Δt" to set the desired time step for the inflated generator method.
-2. On Line 11 of "generator_script.jl", change "ℓ" to set the desired side length for the boxes we subdivide the spatial domain for the switching Double Gyre system into (and hence, set the resolution level of the results).
-3. On Line 23 of "generator_script.jl", choose a new (positive) value for the temporal diffusion parameter a. This parameter is currently set to 0.115, as this gives us a reasonably good match between the leading spatial and temporal eigenvalues of the inflated generator.
-4. On Line 37 of "generator_script.jl", change "num_of_Λ" to set the number of eigenvalues/eigenvectors of the inflated generator you wish to compute using the Arpack eigs function. This is currently set to 10, which should be sufficient for this system, but increase this if desired.
-5. On Line 48 of "generator_script.jl", change "time_slice_spacing" to some integer greater than or equal to 1, if you only wish to include every time_slice_spacing-th slice after t_0 = 0 in the plots/movies of the eigenvectors/SEBA vectors produced.
