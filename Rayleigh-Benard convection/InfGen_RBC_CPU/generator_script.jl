@@ -4,11 +4,11 @@
 using LinearAlgebra, Interpolations, HCubature, SparseArrays, Statistics, HDF5, JLD2, DelimitedFiles, ArnoldiMethod, Plots, PColorPlot
 
 # Load in the generator functions and the SEBA function
-include("generator_functions.jl")
-include("SEBA.jl")
+include("./generator_functions.jl")
+include("./SEBA.jl")
 
-# Name the path to the folder containing the RBC inflated generator repository
-pathname = "./src/cpu_code/aNew-Aug25/"
+# Name the path to the folder to which we wish to save our results
+pathname = "./"
 
 # Name the path to the folder containing the RBC velocity data
 path_to_data = "./RBC Velocity Data/"
@@ -41,43 +41,11 @@ paramtxtfile = pathname * "InfGen Parameters.txt"
 x_data, y_data, z_data, ϵ, a_init = read_data_and_get_parameters(grid, time_range, path_to_data, paramtxtfile)
 
 # Choose a value for the temporal diffusion parameter a (you can start with the initial heuristic and increase it later on)
-a = 12.25
+a = round(a_init, digits=1)
 
 println("Making time slices of generator...")
-# Create the time averaged generator
-Gvec = []
-time_spatgens_total = 0
-for t ∈ 1:num_time_steps
-    # Due to memory constraints, velocity data needs to be loaded in one time step at a time
-    name_of_file = path_to_data * "snapData_" * string(time_range[t]) * ".h5"
-    file_ID = h5open(name_of_file)
-
-    u_now = read(file_ID, "/U")
-    u_now = permutedims(u_now, [3, 2, 1])
-
-    v_now = read(file_ID, "/V")
-    v_now = permutedims(v_now, [3, 2, 1])
-
-    w_now = read(file_ID, "/W")
-    w_now = permutedims(w_now, [3, 2, 1])
-    
-    close(file_ID)
-
-    # Generate the velocity component interpolants
-    Iplt_u, Iplt_v, Iplt_w = get_linear_interpolant(x_data, y_data, z_data, u_now, v_now, w_now)
-
-    # Define a velocity vector function from the interpolants
-    F(x) = (v_orientation).*[Iplt_u(x[1], x[2], x[3]), Iplt_v(x[1], x[2], x[3]), Iplt_w(x[1], x[2], x[3])]
-
-    # Create the generator at this time step and attach it to Gvec
-    time_spatgens = @elapsed G = make_generator(d, grid, F, ϵ)
-    global time_spatgens_total += time_spatgens
-    push!(Gvec, G)
-end
-
-open(paramtxtfile,"a") do file
-    println(file,"The time taken to construct all $(num_time_steps) spatial generators with multithreading enabled is ",time_spatgens_total," seconds")
-end
+# Create the spatial generators for all time steps
+Gvec = make_generator_slices(d, grid, x_data, y_data, z_data, v_orientation, ϵ, time_range, path_to_data, paramtxtfile)
 
 open(paramtxtfile,"a") do file
     println(file,"The selected value for a is ",a)
@@ -87,7 +55,7 @@ println("Making inflated generator...")
 𝐆 = make_inflated_generator(Gvec, Δt, a)
 
 println("Computing inflated generator eigenvalues...")
-num_of_Λ = 600
+num_of_Λ = 300
 tol = √eps() # The default tol for the Arnoldi method is used now, change it to any level you wish
 
 Λ, V = eigensolve_inflated_generator(𝐆, num_of_Λ, tol, paramtxtfile)
@@ -107,7 +75,7 @@ plot_slices(real.(V), index_to_plot, grid, time_range, col_scheme, picfilename, 
 
 # Compute SEBA using as many of the available real-valued spatial eigenvectors as you wish
 
-num_of_SEBA = min(30,length(real_spat_inds)) # Set the number of real-valued spatial eigenvectors to take
+num_of_SEBA = length(real_spat_inds) # Set the number of real-valued spatial eigenvectors to take
 time_seba = @elapsed Σ, ℛ = SEBA(real.(V[:, real_spat_inds[1:num_of_SEBA]]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
