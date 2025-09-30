@@ -62,13 +62,13 @@ Once an inflated generator script file has been executed, a text file along with
 
 The Figure below shows time slices of the leading real-valued spatial eigenvector for the inflated generator of the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart, produced for the sake of validation of the code and the results. This Figure can be reproduced by running either the CPU or the GPU version of "generator_script.jl" in their current forms.
 
-[//]: # <img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/adcbd6ba-6513-40f2-81f8-105e5cfc250e" />
+<!--<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/adcbd6ba-6513-40f2-81f8-105e5cfc250e" />-->
 
 <img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/98a10f6a-69b8-4c95-8f38-5193f615746f" />
 
 The Figure below shows time slices of the maxima of 27 SEBA vectors generated for the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart. Quasi-stationary families of almost-invariant sets are identifiable through sub-regions of the domain coloured in deep red which roughly maintain their shape and do not fade in colour for at least 30-40 units of time. This Figure can be reproduced by running either version of "generator_script.jl" in their current forms.
 
-[//]: # <img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/89d58721-f307-4d19-835c-e70f518b652b" />
+<!--<img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/89d58721-f307-4d19-835c-e70f518b652b" />-->
 
 <img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/b99cb872-8ea5-4ede-a81c-d929a20f1bc1" />
 
