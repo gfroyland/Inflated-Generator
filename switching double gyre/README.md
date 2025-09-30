@@ -1,6 +1,6 @@
 # Readme File for the Switching Double Gyre
 
-This folder contains Julia code designed for the numerical implementation of the inflated generator method to identify quasi-stationary families of almost-invariant sets present within a switching Double Gyre flow system., along with MATLAB code used to produce a sample Figure for the generated results.
+This folder contains Julia code designed for the numerical implementation of the inflated generator method to identify quasi-stationary families of almost-invariant sets present within a switching Double Gyre flow system, along with MATLAB code used to produce a sample Figure for the generated results.
 
 This folder contains the following files:
 
