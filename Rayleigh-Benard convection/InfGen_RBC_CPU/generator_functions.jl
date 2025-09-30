@@ -249,6 +249,7 @@ function make_generator(d, grid, F, ϵ)
     return G
 end
 
+# This function is used to build the spatial generator at every time step within time_range, by calling make_generator() num_time_steps times.
 function make_generator_slices(d, grid, x_data, y_data, z_data, v_orientation, ϵ, time_range, path_to_data, paramtxtfile)
 
     Gvec = []
