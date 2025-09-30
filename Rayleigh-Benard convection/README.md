@@ -15,7 +15,11 @@ When running the code featured in this repository, please ensure that you run it
 
 # Downloading the RBC Velocity Data
 
-Unfortunately, owing to their large file sizes, the RBC velocity data required to run this code cannot be downloaded from this repository. A selection of data which can be used to plot the results seen in the RBC paper can be downloaded from the Zenodo repository available at this link: *Details to follow...*
+Unfortunately, owing to their large file sizes, the RBC velocity data required to run this code cannot be downloaded from this repository. This velocity data, along with a subset of results data which can be used to replicate the Figures seen in 
+
+Aleksandar Badza, Gary Froyland, Roshan J. Samuel and Joerg Schumacher. "Transient almost-invariant sets reveal convective heat transfer patterns in plane-layer Rayleigh-Benard convection", Publication details TBA.
+
+can be downloaded from the Zenodo repository available at this link: *Details to follow...*
 
 # Downloading the Repository and Running the Code
 
