@@ -1,6 +1,9 @@
 # This file contains the functions required to numerically implement the Inflated Generator method on the three-dimensional Rayleigh-Benard Convection (RBC) velocity data.
 # In this version, we compute the inflated generator eigenvectors using the Arnoldi Method with large matrix multiplications moved to the GPU to improve the efficiency of the method.
 
+using LinearAlgebra, Interpolations, HCubature, SparseArrays, Statistics, HDF5, JLD2, DelimitedFiles, ArnoldiMethod, Plots, PColorPlot, CUDA
+
+
 #create a data structure for the grid
 struct Grid
     centres

@@ -1,8 +1,6 @@
 # This script performs the full inflated generator method for the 3D RBC velocity system with the Arnoldi method for eigensolving the generator and SEBA vector computation performed on a GPU.
 # Start by instantiating the Julia environment and loading in all necessary packages and functions for this method.
 
-using LinearAlgebra, Interpolations, HCubature, SparseArrays, Statistics, HDF5, JLD2, DelimitedFiles, ArnoldiMethod, Plots, PColorPlot, CUDA
-
 # Load in the generator functions and the SEBA function
 include("./generator_functions.jl")
 include("./SEBA.jl")
