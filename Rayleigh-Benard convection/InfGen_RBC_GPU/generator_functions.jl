@@ -249,6 +249,49 @@ function make_generator(d, grid, F, ϵ)
     return G
 end
 
+# This function is used to build the spatial generator at every time step within time_range, by calling make_generator() num_time_steps times.
+function make_generator_slices(d, grid, x_data, y_data, z_data, v_orientation, ϵ, time_range, path_to_data, paramtxtfile)
+
+    Gvec = []
+    time_spatgens_total = 0
+    num_time_steps = length(time_range)
+
+    for t ∈ 1:num_time_steps
+        # Due to memory constraints, velocity data needs to be loaded in one time step at a time
+        name_of_file = path_to_data * "snapData_" * string(time_range[t]) * ".h5"
+        file_ID = h5open(name_of_file)
+
+        u_now = read(file_ID, "/U")
+        u_now = permutedims(u_now, [3, 2, 1])
+
+        v_now = read(file_ID, "/V")
+        v_now = permutedims(v_now, [3, 2, 1])
+
+        w_now = read(file_ID, "/W")
+        w_now = permutedims(w_now, [3, 2, 1])
+        
+        close(file_ID)
+
+        # Generate the velocity component interpolants
+        Iplt_u, Iplt_v, Iplt_w = get_linear_interpolant(x_data, y_data, z_data, u_now, v_now, w_now)
+
+        # Define a velocity vector function from the interpolants
+        F(x) = (v_orientation).*[Iplt_u(x[1], x[2], x[3]), Iplt_v(x[1], x[2], x[3]), Iplt_w(x[1], x[2], x[3])]
+
+        # Create the generator at this time step and attach it to Gvec
+        time_spatgens = @elapsed G = make_generator(d, grid, F, ϵ)
+        time_spatgens_total += time_spatgens
+        push!(Gvec, G)
+    end
+
+    open(paramtxtfile,"a") do file
+        println(file,"The time taken to construct all $(num_time_steps) spatial generators with multithreading enabled is ",time_spatgens_total," seconds")
+    end
+
+    return Gvec
+
+end
+
 # This function is used to make the inflated generator by applying temporal diffusion to the vector of generator matrices Gvec. The level of temporal diffusion is defined by a and a temporal spacing of time_step is used to produce the spacetime Laplace operator.
 function make_inflated_generator(Gvec, time_step, a)
 
