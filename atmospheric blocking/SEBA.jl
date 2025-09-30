@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 function SEBA(V, Rinit=nothing)
 
     # Inputs: 
@@ -66,7 +64,7 @@ function SEBA(V, Rinit=nothing)
     S = S[:, ind]
 
     error = norm(Rnew - R)
-    return S
+    return S, R, iter, error
 
 end
 
