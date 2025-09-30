@@ -62,11 +62,11 @@ Once an inflated generator script file has been executed, a text file along with
 
 The Figure below shows time slices of the leading real-valued spatial eigenvector for the inflated generator of the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart, produced for the sake of validation of the code and the results. This Figure can be reproduced by running either the CPU or the GPU version of "generator_script.jl".
 
-![Leading_evec](/Sample%20Figures/RBC%20Leading%20Spatial%20Eigenvector%20xy%20Midplane.png)
+<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/adcbd6ba-6513-40f2-81f8-105e5cfc250e" />
 
 The Figure below shows time slices of the maxima of 24 SEBA vectors generated for the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart. Quasi-stationary families of almost-invariant sets are identifiable through sub-regions of the domain coloured in deep red which roughly maintain their shape and do not fade in colour for at least 30-40 units of time. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl".
 
-![SEBA_Max](/Sample%20Figures/RBC%20SEBA%20Maxima%20xy%20Midplane.png)
+<img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/89d58721-f307-4d19-835c-e70f518b652b" />
 
 # Changing Parameters Within The Scripts
 
