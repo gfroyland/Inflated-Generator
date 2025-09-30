@@ -13,7 +13,7 @@ struct Grid
     latspacing
 end
 
-include("../SEBA.jl")
+include("./SEBA.jl")
 
 #create a dictionary to do the indexing we want and a grid struct
 function make_dict_grid(lonmin, lonmax, lonspacing, latmin, latmax, latspacing)

@@ -73,12 +73,12 @@ println("Plotting SEBA vector time slices...")
 index_to_plot = 1 # The first SEBA vector illustrates this block
 time_slice_spacing = 8
 titleforplots = "SEBA Vector $index_to_plot (The West Block)"
-picfilename = "./atmospheric blocking/The West Block illustrated through SEBA vector $index_to_plot.png"
-moviefilename = "./atmospheric blocking/Movie of the West Block illustrated through SEBA vector $index_to_plot.mp4"
+picfilename = "./The West Block illustrated through SEBA vector $index_to_plot.png"
+moviefilename = "./Movie of the West Block illustrated through SEBA vector $index_to_plot.mp4"
 @time plot_slices(Σ, index_to_plot, time_slice_spacing, grid, date_range, :Reds, titleforplots, picfilename, moviefilename)
 
 # Save the results to HDF5 and JLD2 files 
 # Data to save: Vectors of lon/lat ranges (or the full grid struct in JLD2), date range vector, time slice spacing for plots, eigenvalues and eigenvectors of the inflated generator and SEBA vectors
 println("Saving variables...")
-filename = "./atmospheric blocking/InfGen_Results_EuroBlock_West"
+filename = "./InfGen_Results_EuroBlock_West"
 @time save_results(grid, date_range, time_slice_spacing, Λ, V, Σ, filename)
