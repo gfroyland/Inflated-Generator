@@ -86,10 +86,7 @@ function read_data_and_get_parameters(grid, time_range, path_to_data, paramtxtfi
     L_max_y = (grid.y_max - grid.y_min)
     L_max_z = (grid.z_max - grid.z_min)
 
-    # We have periodic BCs in x and y, so multiply the a heuristic by two
-    a = sqrt(5/32)*(time_range[end]-time_range[1])*√(1.1*v̄*(grid.Δx)) 
-    #a = sqrt(5/16)*ϵ*(time_range[end]-time_range[1])
-    #a = sqrt(5/36)*ϵ*(time_range[end]-time_range[1])
+    a = sqrt(5/32)*(time_range[end]-time_range[1])*√(1.1*v̄*(grid.Δx))
     println("The initial heuristic for a is... $a")
 
     # Load the previously calculated parameters and other relevant information to the inflated generator calculations into your parameter text file
