@@ -45,7 +45,7 @@ function read_data_and_get_parameters(grid, date_range)
     deg2metr = 40075000 / 360
 
     # Begin by reading in the longitudinal and latitudinal ranges of the velocity data
-    name_of_file = "./atmospheric blocking/data/ERA5_atmos_6HR_" * string(year(date_range[1])) * lpad(month(date_range[1]), 2, "0") * lpad(day(date_range[1]), 2, "0") * "_" * lpad(hour(date_range[1]), 2, "0") * "00.h5"
+    name_of_file = "./data/ERA5_atmos_6HR_" * string(year(date_range[1])) * lpad(month(date_range[1]), 2, "0") * lpad(day(date_range[1]), 2, "0") * "_" * lpad(hour(date_range[1]), 2, "0") * "00.h5"
     file_ID = h5open(name_of_file)
 
     # M_lons and M_lats are vectors containing the longitudinal 
@@ -86,7 +86,7 @@ function read_data_and_get_parameters(grid, date_range)
     for τ ∈ 1:num_time_steps
 
         # Locate the data file within this directory and open it to access the data
-        name_of_file = "./atmospheric blocking/data/ERA5_atmos_6HR_" * string(year(date_range[τ])) * lpad(month(date_range[τ]), 2, "0") * lpad(day(date_range[τ]), 2, "0") * "_" * lpad(hour(date_range[τ]), 2, "0") * "00.h5"
+        name_of_file = "./data/ERA5_atmos_6HR_" * string(year(date_range[τ])) * lpad(month(date_range[τ]), 2, "0") * lpad(day(date_range[τ]), 2, "0") * "_" * lpad(hour(date_range[τ]), 2, "0") * "00.h5"
         file_ID = h5open(name_of_file)
     
         # Read in and save wind velocity component data for the entire spatial domain, used to produce linear interpolants later.
