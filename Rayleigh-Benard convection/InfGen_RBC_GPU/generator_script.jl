@@ -97,7 +97,7 @@ index_to_plot = 1
 time_ind = trunc(Int64, num_time_steps/2)
 col_scheme = :Reds
 picfilename = pathname * "RBC SEBA Maxima Five Planes.png"
-plot_interpolated_slices_fiveplanes(V, index_to_plot, x_full, y_full, z_full, time_ind, col_scheme, picfilename)
+plot_interpolated_slices_fiveplanes(Σ_int_max, index_to_plot, x_full, y_full, z_full, time_ind, col_scheme, picfilename)
 
 # Save the most important output data to HDF5/JLD2 files
 
