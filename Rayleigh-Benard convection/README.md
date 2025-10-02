@@ -13,6 +13,8 @@ The difference between the code files in each folder is that in the version of t
 
 When running the code featured in this repository, please ensure that you run it with a (as of October 2025) new version of Julia such as v1.10.9 or v1.11.6. Do not run this code with Julia versions v1.10.7 or v1.11.1, or the code featured within this repository will fail due to circular dependency issues present with the CUDA.jl package on these versions of Julia. For more information on these circular dependency issues, we refer you to this link: https://discourse.julialang.org/t/circular-dependency-warning/123388.
 
+For the CPU version of this code, given a value of the parameter ℓ = 1/4 (the box side length used to construct the spatial generators for the overall inflated generator), on a laptop we expect this code to take roughly eight minutes. Of all of the processes which form this method, eigensolving the inflated generator using the Arnoldi method is the longest process, coming in at roughly six minutes.
+
 # Downloading the RBC Velocity Data
 
 Unfortunately, owing to their large file sizes, the RBC velocity data required to run this code cannot be downloaded from this repository. This velocity data, along with a subset of results data which can be used to replicate the Figures seen in 
@@ -53,24 +55,27 @@ Once an inflated generator script file has been executed, a text file along with
 3. "RBC_InfGen_Eigenbasis_Results.h5", an HDF5 file containing the inflated generator eigenvalues, vectors with indices used to identify the type of each eigenvalue (spatial, temporal or complex) and data pertaining to the real-valued spatial eigenvectors of the inflated generator (these are the only eigenvectors saved, in an effort to reduce the size of this data file and also because these eigenvectors are the only ones that are practical for use in finding quasi-stationary families of almost-invariant sets). Also included is the grid data for the spatial domain and the time range taken for the inflated generator calculations.
 4. "RBC_InfGen_SEBA_Data.h5", an HDF5 file containing the SEBA vectors calculated from the real-valued spatial inflated generator eigenvectors, and interpolated versions of these vectors on a finer grid corresponding to half the box side length used in the original inflated generator calculations. Also saved is the spatial grid data for the original grid, the spatial grid data for the finer grid over which the SEBA data is interpolated, and the time range data.
 5. "RBC Inflated Generator Spectrum.png", a plot of the eigenvalue spectrum for the inflated generator, showing the leading 300 eigenvalues distinguished by their type (spatial, temporal or complex).
-6. "RBC Leading Spatial Eigenvector xy Midplane.mp4", a movie showing the temporal evolution of the leading real-valued spatial eigenvector of the inflated generator for the RBC flow system taken along the xy-plane with z = 0.5 (in other words, the xy "midplane").
-7. "RBC Leading Spatial Eigenvector xy Midplane.png", a gridded Figure showing time slices of the leading real-valued spatial eigenvector of the inflated generator for the RBC flow system in the xy-plane with z = 0.5 spaced 3 T_f (units of time) apart. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl" (in the "src/cpu_code" folder or the "src/gpu_code" folder).
-8. "RBC SEBA Maxima xy Midplane.mp4", a movie showing the temporal evolution of the maxima of all SEBA vectors computed for the RBC flow system taken along the xy-plane with z = 0.5 (in other words, the xy "midplane").
-9. "RBC SEBA Maxima xy Midplane.png", a gridded Figure showing time slices of the maxima of all SEBA vectors computed for the RBC flow system in the xy-plane with z = 0.5 spaced 3 T_f (units of time) apart. This Figure can be found in the "Sample Figures" folder and can be reproduced by running either version of "generator_script.jl" (in the "src/cpu_code" folder or the "src/gpu_code" folder).
+6. "RBC SEBA Maxima xy Midplane.mp4", a movie showing the temporal evolution of the maxima of all SEBA vectors computed for the RBC flow system taken along the xy-plane with z = 0.5 (in other words, the xy "midplane").
+7. "RBC SEBA Maxima xy Midplane.png", a gridded Figure showing time slices of the maxima of all SEBA vectors computed for the RBC flow system in the xy-plane with z = 0.5 spaced 3 T_f (units of time) apart.
+8. "RBC SEBA Maxima Five Planes.png", a Figure showing the maxima of all SEBA vectors computed for the RBC flow system taken at the middlemost moment of our time interval restricted to five two-dimensional planes within our full three-dimensional domain. The five planes in question are: the xy-Bottom (or "xy-Floor", a horizontal xy-plane taken within the lower thermal boundary layer of our fluid cell), the xy-midplane (the horizontal xy-plane with z = 0.5), the xy-Top (or "xy-Ceiling", a horizontal xy-plane taken within the upper thermal boundary layer of our fluid cell), the xz-midplane (the vertical xz-plane with y = 0) and the yz-midplane (the vertical yz-plane with x = 0).
 
 # Sample Figures
 
-The Figure below shows time slices of the leading real-valued spatial eigenvector for the inflated generator of the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart, produced for the sake of validation of the code and the results. This Figure can be reproduced by running either the CPU or the GPU version of "generator_script.jl" in their current forms.
+The Figure below shows time slices of the maxima of 30 SEBA vectors generated for the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart. Quasi-stationary families of almost-invariant sets are identifiable through sub-regions of the domain coloured in deep red which roughly maintain their shape and do not fade in colour for at least 30-40 units of time. This Figure can be reproduced by running the GPU version of "generator_script.jl" in its current form. The CPU version of this script will also produce this Figure, but the code will take much longer to execute if we use the same resolution level (governed by ℓ) as that taken in the GPU version of the code.
 
 <!--<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/adcbd6ba-6513-40f2-81f8-105e5cfc250e" />-->
 
-<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/98a10f6a-69b8-4c95-8f38-5193f615746f" />
+<!--<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/98a10f6a-69b8-4c95-8f38-5193f615746f" />-->
 
-The Figure below shows time slices of the maxima of 27 SEBA vectors generated for the RBC flow system taken along the xy-plane with z = 0.5 (the xy-midplane) and spaced 3 T_f (units of time) apart. Quasi-stationary families of almost-invariant sets are identifiable through sub-regions of the domain coloured in deep red which roughly maintain their shape and do not fade in colour for at least 30-40 units of time. This Figure can be reproduced by running either version of "generator_script.jl" in their current forms.
+<img width="5000" height="4000" alt="Image" src="https://github.com/user-attachments/assets/c919f73f-5213-4cbb-bb39-c6072b622899" />
+
+The Figure below shows the maxima of 30 SEBA vectors generated for the RBC flow system taken along five two-dimensional restrictions of our three-dimensional spatial domain at the middlemost point of our time interval, 2052 T_f. This Figure can also be reproduced by running the GPU version of "generator_script.jl" in its current form. Again, the CPU version of this script will also produce this Figure, however it will take much longer for the code to execute at this fine resolution level.
 
 <!--<img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/89d58721-f307-4d19-835c-e70f518b652b" />-->
 
-<img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/b99cb872-8ea5-4ede-a81c-d929a20f1bc1" />
+<!--<img width="1000" height="800" alt="Image" src="https://github.com/user-attachments/assets/b99cb872-8ea5-4ede-a81c-d929a20f1bc1" />-->
+
+<img width="4999" height="4999" alt="Image" src="https://github.com/user-attachments/assets/a6139d1c-cdad-45b8-a8c1-cd1b462f331e" />
 
 # Changing Parameters Within The Scripts
 
