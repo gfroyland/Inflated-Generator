@@ -3,7 +3,6 @@
 
 using LinearAlgebra, Interpolations, HCubature, SparseArrays, Statistics, HDF5, JLD2, DelimitedFiles, ArnoldiMethod, Plots, PColorPlot, CUDA
 
-
 #create a data structure for the grid
 struct Grid
     centres
@@ -114,9 +113,9 @@ function get_linear_interpolant(x_data, y_data, z_data, u_data, v_data, w_data)
 
     # We create one interpolant per velocity component (three overall)
 
-    Iplt_u = linear_interpolation((x_data, y_data, z_data), u_data)
-    Iplt_v = linear_interpolation((x_data, y_data, z_data), v_data)
-    Iplt_w = linear_interpolation((x_data, y_data, z_data), w_data)
+    Iplt_u = linear_interpolation((x_data, y_data, z_data), u_data, extrapolation_bc=(Periodic(),Periodic(),Reflect()))
+    Iplt_v = linear_interpolation((x_data, y_data, z_data), v_data, extrapolation_bc=(Periodic(),Periodic(),Reflect()))
+    Iplt_w = linear_interpolation((x_data, y_data, z_data), w_data, extrapolation_bc=(Periodic(),Periodic(),Reflect()))
 
     # Return the interpolants for the velocity vector components at a particular time slice.
     return Iplt_u, Iplt_v, Iplt_w
@@ -577,7 +576,95 @@ function plot_interpolated_slices(V, index_to_plot, x_full, y_full, z_full, time
         title_now = "$(time_range[t]) T_f"
         push!(fig, pcolor(x_full, y_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(-4, 4), linewidth=0, levels=100, aspectratio=1, legend=:none, size=(1000,800)))
     end
-    plot(fig..., layout=(5, 7))
+    plot(fig..., layout=(5, 7), dpi=500)
+    savefig(picfilename)
+
+end
+
+# Plot eigenvector (or SEBA vector) no. index_to_plot along the x-y floor, ceiling and midplane; as well as the x-z and y-z vertical midplanes
+function plot_interpolated_slices_fiveplanes(V, index_to_plot, x_full, y_full, z_full, time_ind, col_scheme, picfilename)
+
+    # If we're plotting SEBA vectors, all vector entries below 0 should be replaced with 0.
+    if col_scheme == :Reds
+        V[V .< 0] .= 0
+    end
+
+    # find a common colour range if we're plotting eigenvectors, otherwise fix col_lims to (0, 1) if we're plotting SEBA vectors.
+    if col_scheme == :Reds
+        col_lims = (0, 1)
+    else
+        col_lims = (minimum((V[:,:,:,:,index_to_plot])),maximum((V[:,:,:,:,index_to_plot])))
+    end
+
+    # Plot individual frames of the vector along the five restricted 2D planes
+    fig = []
+    fig_layout = @layout [a b c; d ; e]
+    
+    # Plane #1: The x-y floor (Bottom)
+
+    ind_now = 3 # Plot the max. SEBA not at the precise "floor" of the domain, but rather at a distance of twice the mesh size of the interpolated data from the floor
+    V_now = V[:,:,ind_now,time_ind,index_to_plot]
+    title_now = "xy-Bottom"
+    push!(fig, pcolor(x_full, y_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(-4, 4), linewidth=0, levels=100, aspectratio=1, legend=:none))
+    
+    # Plane #2: The x-y midplane
+    # Find the z index (or indices) corresponding to the x-y midplane
+
+    if (mod(length(z_full),2) == 0)
+        ind_upper = trunc(Int64,ceil(length(z_full)/2)+1)
+        ind_lower = trunc(Int64,ceil(length(z_full)/2))
+        V_now = (V[:,:,ind_lower,time_ind,index_to_plot] .+ V[:,:,ind_upper,time_ind,index_to_plot])./2
+    else
+        ind_now = trunc(Int64,ceil(length(z_full)/2))
+        V_now = V[:,:,ind_now,time_ind,index_to_plot]
+    end
+
+    title_now = "xy-Midplane"
+    push!(fig, pcolor(x_full, y_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(-4, 4), linewidth=0, levels=100, aspectratio=1, legend=:none))
+    
+    # Plane #3: The x-y ceiling (Top)
+
+    ind_now = length(z_full)-2 # Plot the max. SEBA not at the precise "ceiling" of the domain, but rather at a distance of twice the mesh size of the interpolated data from the ceiling
+    V_now = V[:,:,ind_now,time_ind,index_to_plot]
+    title_now = "xy-Top"
+    push!(fig, pcolor(x_full, y_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(-4, 4), linewidth=0, levels=100, aspectratio=1, legend=:none))
+    
+    # Plane #4: The x-z midplane
+    # Find the y index (or indices) corresponding to the x-z midplane
+
+    V_perm = permutedims(V[:,:,:,time_ind,index_to_plot],[1 3 2])
+
+    if (mod(length(y_full),2) == 0)
+        ind_upper = trunc(Int64,ceil(length(y_full)/2)+1)
+        ind_lower = trunc(Int64,ceil(length(y_full)/2))
+        V_now = (V_perm[:,:,ind_lower] .+ V_perm[:,:,ind_upper])./2
+    else
+        ind_now = trunc(Int64,ceil(length(y_full)/2))
+        V_now = V_perm[:,:,ind_now]
+    end
+
+    title_now = "xz-Midplane"
+    push!(fig, pcolor(x_full, z_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(0, 1), linewidth=0, levels=100, aspectratio=1, legend=:none))
+    
+    # Plane #5: The y-z midplane
+    # Find the x index (or indices) corresponding to the y-z midplane
+
+    V_perm = permutedims(V[:,:,:,time_ind,index_to_plot],[2 3 1])
+
+    if (mod(length(x_full),2) == 0)
+        ind_upper = trunc(Int64,ceil(length(x_full)/2)+1)
+        ind_lower = trunc(Int64,ceil(length(x_full)/2))
+        V_now = (V_perm[:,:,ind_lower] .+ V_perm[:,:,ind_upper])./2
+    else
+        ind_now = trunc(Int64,ceil(length(x_full)/2))
+        V_now = V_perm[:,:,ind_now]
+    end
+
+    title_now = "yz-Midplane"
+    push!(fig, pcolor(y_full, z_full, transpose(V_now), interpolate=false, clims=col_lims, c=col_scheme, title=title_now, xlim=(-4, 4), ylim=(0, 1), linewidth=0, levels=100, aspectratio=1, legend=:none))
+
+    # Complete the full Figure using the above five plots
+    plot(fig...; layout=fig_layout,size=(1000,1000),dpi=500)
     savefig(picfilename)
 
 end
@@ -635,62 +722,6 @@ function save_results(grid, time_range, Gvec, Δt, genfilename, Λ, V, real_spat
 
     # Save the interpolated SEBA data
     #file_ID["SEBA_Interp"] = Σ_int
-    file_ID["SEBA_Interp_Max"] = Σ_int_max
-
-    close(file_ID)
-
-end
-
-function save_results_newA(grid, time_range, Λ, V, real_spat_inds, temp_inds, comp_inds, resultsfilename, Σ, Σ_max, x_full, y_full, z_full, Σ_int, Σ_int_max, sebafilename)
-    
-    # Two files to save: Eigenbasis Results (HDF5), SEBA Results (HDF5)
-    # No need to resave the spatial generator data which has been loaded in
-
-    # File 1: Save inflated generator eigenbasis data to an HDF5 file
-    file_ID = h5open(resultsfilename, "w")
-
-    # Save the spatial coordinate vectors
-    file_ID["x_range"] = grid.x_range
-    file_ID["y_range"] = grid.y_range
-    file_ID["z_range"] = grid.z_range
-
-    # The collect() function should be used to save time_range in order to avoid an error being thrown
-    file_ID["time_range"] = collect(time_range)
-
-    # Complex valued data cannot be saved to an HDF5 file, so the real and imaginary parts of the eigenvalues and eigenvectors must be split and saved separately
-    file_ID["Eigvals_Real"] = real.(Λ)
-    file_ID["Eigvals_Imag"] = imag.(Λ)
-
-    # Only save the real-valued spatial eigenvectors, which for the 3D RBC flow likely won't even make up 10% of the overall eigenbasis sample
-    file_ID["Eigvecs_Usable"] = real.(V[:, real_spat_inds])
-
-    # Save the temp_inds, real_spat_inds and comp_inds vectors, so that a spectrum plot can still be reproduced
-    file_ID["temp_inds"] = temp_inds
-    file_ID["real_spat_inds"] = real_spat_inds
-    file_ID["comp_inds"] = comp_inds
-
-    close(file_ID)
-
-    # File 2: Save SEBA data (original and interpolated) to an HDF5 file
-    file_ID = h5open(sebafilename, "w")
-
-    # Save the spatial coordinate vectors and the time range
-    file_ID["x_range"] = grid.x_range
-    file_ID["y_range"] = grid.y_range
-    file_ID["z_range"] = grid.z_range
-    file_ID["time_range"] = collect(time_range)
-
-    # Save the original (non-interpolated) SEBA data
-    file_ID["SEBA"] = Σ
-    file_ID["SEBA_Max"] = Σ_max
-
-    # Save the spatial coordinate vectors for the interpolated data
-    file_ID["x_interp"] = collect(x_full)
-    file_ID["y_interp"] = collect(y_full)
-    file_ID["z_interp"] = collect(z_full)
-
-    # Save the interpolated SEBA data
-    file_ID["SEBA_Interp"] = Σ_int
     file_ID["SEBA_Interp_Max"] = Σ_int_max
 
     close(file_ID)
