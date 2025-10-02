@@ -63,17 +63,9 @@ tol = √eps() # The default tol for the Arnoldi method is used now, change it t
 spectrumpicname = pathname * "RBC Inflated Generator Spectrum.png"
 real_spat_inds, temp_inds, comp_inds = classify_eigs_and_plot_spectrum(grid, Λ, V, tol, paramtxtfile, spectrumpicname)
 
-# Make a movie and Figure file of the leading non-trivial real-valued spatial eigenvector V[:, real_spat_inds[2]] along the x-y Midplane
-
-index_to_plot = real_spat_inds[2]
-col_scheme = :RdBu
-picfilename = pathname * "RBC Leading Spatial Eigenvector xy Midplane.png"
-moviefilename = pathname * "RBC Leading Spatial Eigenvector xy Midplane.mp4"
-plot_slices(real.(V), index_to_plot, grid, time_range, col_scheme, picfilename, moviefilename)
-
 # Compute SEBA using as many of the available real-valued spatial eigenvectors as you wish
 
-num_of_SEBA = length(real_spat_inds) # Set the number of real-valued spatial eigenvectors to take
+num_of_SEBA = min(30,length(real_spat_inds)) # Set the number of real-valued spatial eigenvectors to take
 time_seba = @elapsed Σ, ℛ = SEBA(real.(V[:, real_spat_inds[1:num_of_SEBA]]))
 println("The respective SEBA vector minima are ", minimum(Σ, dims=1))
 
@@ -98,6 +90,16 @@ col_scheme = :Reds
 picfilename = pathname * "RBC SEBA Maxima xy Midplane.png"
 moviefilename = pathname * "RBC SEBA Maxima xy Midplane.mp4"
 plot_interpolated_slices(Σ_int_max, index_to_plot, x_full, y_full, z_full, time_range, col_scheme, picfilename, moviefilename)
+
+# Make a Figure file of the SEBA maxima at the midpoint of the time interval using your interpolated data along three horizontal restrictions of the domain (the x-y floor, midplane and ceiling) and two vertical restrictions (the x-z and y-z midplanes)
+
+index_to_plot = 1
+time_ind = trunc(Int64, num_time_steps/2)
+col_scheme = :Reds
+picfilename = pathname * "RBC SEBA Maxima Five Planes.png"
+plot_interpolated_slices_fiveplanes(V, index_to_plot, x_full, y_full, z_full, time_ind, col_scheme, picfilename)
+
+# Save the most important output data to HDF5/JLD2 files
 
 println("Saving variables...")
 genfilename = pathname * "RBC_InfGen_Spatial_Generator_Data.jld2"
