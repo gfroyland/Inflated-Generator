@@ -53,7 +53,7 @@ println("Making inflated generator...")
 𝐆 = make_inflated_generator(Gvec, Δt, a)
 
 println("Computing inflated generator eigenvalues...")
-num_of_Λ = 300
+num_of_Λ = 500
 tol = √eps() # The default tol for the Arnoldi method is used now, change it to any level you wish
 
 Λ, V = eigensolve_inflated_generator(𝐆, num_of_Λ, tol, paramtxtfile)
